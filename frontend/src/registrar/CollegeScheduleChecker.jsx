@@ -1580,7 +1580,17 @@ const CollegeScheduleChecker = () => {
           </Alert>
         </Snackbar>
       )}
-
+      <br />
+      <br />
+      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}` }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2", }}>
+            <TableRow>
+              <TableCell sx={{ color: 'white', textAlign: "Center" }}>Existing Schedule</TableCell>
+            </TableRow>
+          </TableHead>
+        </Table>
+      </TableContainer>
       <Box sx={{ display: "flex", gap: "1rem" }}>
         <Box>
           <form
@@ -1591,9 +1601,9 @@ const CollegeScheduleChecker = () => {
               border: `2px solid ${borderColor}`,
               backgroundColor: "white",
               padding: "2rem",
-              borderRadius: "8px",
+              
               boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
-              marginTop: "1rem",
+          
             }}
           >
             {/* Day */}
@@ -1830,6 +1840,7 @@ const CollegeScheduleChecker = () => {
           >
             {isDesignationMode ? "Assign Regular Load" : "Assign Designation"}
           </Button>
+
           <table className="mt-[0.7rem]">
             <thead className="bg-[#c0c0c0]">
               <tr className="min-w-[6.5rem] min-h-[2.2rem] flex items-center justify-center border border-black border-b-0 text-[14px] font-semibold">

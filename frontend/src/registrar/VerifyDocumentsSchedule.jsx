@@ -8,6 +8,9 @@ import {
     TableRow,
     TableCell,
     Snackbar,
+    FormControl,
+    InputLabel,
+    Select,
     Alert,
     TableBody
 } from "@mui/material";
@@ -290,7 +293,6 @@ const VerifyDocumentsSchedule = () => {
     const [selectedCampusFilter, setSelectedCampusFilter] = useState("");
 
 
-
     const filteredSchedules = schedules.filter((s) => {
         const scheduleMonth = new Date(s.schedule_date).getMonth() + 1;
 
@@ -313,6 +315,21 @@ const VerifyDocumentsSchedule = () => {
     });
 
 
+    // ===== PAGINATION =====
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 20; // change if needed
+
+    const totalPages = Math.ceil(filteredSchedules.length / rowsPerPage);
+
+    const paginatedSchedules = filteredSchedules.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, selectedMonth, selectedDate, selectedCampusFilter]);
 
 
     // 📅 Dates that actually have exams in the selected month
@@ -476,8 +493,24 @@ const VerifyDocumentsSchedule = () => {
     //     }
     // });
 
+    const cellStyle = {
+        border: `2px solid ${borderColor}`,
+        padding: "6px",
+        fontSize: "0.85rem",
+    };
 
-
+    const whiteSelectStyle = {
+        minWidth: 150,
+        "& .MuiOutlinedInput-root": {
+            color: "white",
+            "& fieldset": { borderColor: "white" },
+            "&:hover fieldset": { borderColor: "white" },
+            "&.Mui-focused fieldset": { borderColor: "white" },
+        },
+        "& .MuiSvgIcon-root": {
+            color: "white",
+        },
+    };
 
 
     // Put this at the very bottom before the return 
@@ -548,9 +581,12 @@ const VerifyDocumentsSchedule = () => {
             {/* ===== NAV CARDS ===== */}
             <Box
                 sx={{
-                    display: "flex",
-                    gap: 2,
-                    mb: 4,
+                  display: "flex",
+          justifyContent: "space-between",
+          flexWrap: "nowrap", // ❌ prevent wrapping
+          width: "100%",
+          mt: 1,
+          gap: 2,
                 }}
             >
                 {tabs.map((tab, index) => (
@@ -587,18 +623,413 @@ const VerifyDocumentsSchedule = () => {
             </Box>
 
             <br />
+            <br />
 
-
-            {/* ===== ADD / EDIT FORM ===== */}
             <TableContainer
                 component={Paper}
                 sx={{
                     width: "100%",
                     border: `2px solid ${borderColor}`,
-                    mb: "40px",
                 }}
             >
-                <Table>
+                <Table size="small">
+
+                    {/* ===== TOP HEADER WITH FILTERS (LIKE YOUR REFERENCE) ===== */}
+                    <TableHead
+
+                    >
+                        <TableRow
+                            sx={{
+                                backgroundColor: settings?.header_color || "#1976d2",
+                            }}
+                        >
+
+
+                            <TableCell
+                                colSpan={9}
+                                sx={{
+                                    border: `2px solid ${borderColor}`,
+                                    py: 1,
+                                    color: "white",
+                                }}
+                            >
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    flexWrap="wrap"
+                                    gap={2}
+                                >
+                                    {/* LEFT SIDE */}
+                                    <Typography fontSize="15px" fontWeight="bold" color="white">
+                                        EXISTING SCHEDULES ({filteredSchedules.length})
+                                    </Typography>
+
+                                    {/* RIGHT SIDE FILTERS */}
+                                    <Box display="flex" gap={1.5} flexWrap="wrap">
+
+                                        <TextField
+                                            select
+                                            size="small"
+                                            value={selectedCampusFilter}
+                                            onChange={(e) => setSelectedCampusFilter(e.target.value)}
+                                            SelectProps={{
+                                                displayEmpty: true,
+                                                renderValue: (selected) => {
+                                                    if (!selected) {
+                                                        return <span style={{ color: "white", opacity: 0.7 }}>Select Campus</span>;
+                                                    }
+                                                    return selected;
+                                                },
+                                            }}
+                                            sx={whiteSelectStyle}
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select Campus
+                                            </MenuItem>
+                                            <MenuItem value="">All Campus</MenuItem>
+                                            {branches.map((b) => (
+                                                <MenuItem key={b.id} value={b.branch}>
+                                                    {b.branch}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                        <TextField
+                                            select
+                                            size="small"
+                                            value={selectedMonth}
+                                            onChange={(e) => {
+                                                setSelectedMonth(e.target.value);
+                                                setSelectedDate("");
+                                            }}
+                                            SelectProps={{
+                                                displayEmpty: true,
+                                                renderValue: (selected) => {
+                                                    if (!selected) {
+                                                        return <span style={{ color: "white", opacity: 0.7 }}>Select Month</span>;
+                                                    }
+                                                    return new Date(0, selected - 1).toLocaleString("default", {
+                                                        month: "long",
+                                                    });
+                                                },
+                                            }}
+                                            sx={whiteSelectStyle}
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select Month
+                                            </MenuItem>
+                                            <MenuItem value="">All Months</MenuItem>
+                                            {Array.from({ length: 12 }).map((_, i) => (
+                                                <MenuItem key={i + 1} value={i + 1}>
+                                                    {new Date(0, i).toLocaleString("default", { month: "long" })}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+
+                                        <TextField
+                                            select
+                                            size="small"
+                                            value={selectedDate}
+                                            onChange={(e) => setSelectedDate(e.target.value)}
+                                            disabled={!selectedMonth}
+                                            SelectProps={{
+                                                displayEmpty: true,
+                                                renderValue: (selected) => {
+                                                    if (!selected) {
+                                                        return <span style={{ color: "white", opacity: 0.7 }}>Select Date</span>;
+                                                    }
+                                                    return formatDate(selected);
+                                                },
+                                            }}
+                                            sx={whiteSelectStyle}
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select Date
+                                            </MenuItem>
+                                            <MenuItem value="">All Dates</MenuItem>
+                                            {availableDates.map((date) => (
+                                                <MenuItem key={date} value={date}>
+                                                    {formatDate(date)}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+
+                                    </Box>
+                                </Box>
+                            </TableCell>
+                        </TableRow>
+
+                        {/* ===== COLUMN HEADERS ===== */}
+                        <TableRow>
+                            {[
+                                "Branch",
+                                "Date",
+                                "Building",
+                                "Room",
+                                "Start",
+                                "End",
+                                "Evaluator",
+                                "Quota",
+                                "Actions",
+                            ].map((header) => (
+                                <TableCell
+                                    key={header}
+                                    align="center"
+                                    sx={{
+                                        color: "black",
+                                        fontWeight: "600",
+                                        fontSize: "0.9rem",
+                                        border: `2px solid ${borderColor}`,
+                                        py: 0.8,
+                                    }}
+                                >
+                                    {header}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+
+                    {/* ===== TABLE BODY ===== */}
+                    <TableBody>
+                        {paginatedSchedules.map((s) => (
+                            <TableRow
+                                key={`${s.id}-${s.schedule_date}-${s.room_description}`}
+                                hover
+                            >
+                                <TableCell align="center" sx={cellStyle}>
+                                    {s.branch}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {formatDate(s.schedule_date)}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {s.building_description}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {s.room_description}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {formatTime(s.start_time)}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {formatTime(s.end_time)}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {s.evaluator}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    {s.room_quota}
+                                </TableCell>
+                                <TableCell align="center" sx={cellStyle}>
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        sx={{ backgroundColor: "green", mr: 1 }}
+                                        onClick={() => handleEdit(s)}
+                                    >
+                                        Edit
+                                    </Button>
+
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        sx={{ backgroundColor: "#9E0000" }}
+                                        onClick={() => {
+                                            setScheduleToDelete(s);
+                                            setOpenDeleteDialog(true);
+                                        }}
+                                    >
+                                        Delete
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            <TableContainer component={Paper} sx={{ width: '100%', }}>
+                <Table size="small">
+                    <TableHead sx={{ backgroundColor: '#6D2323', color: "white" }}>
+                        <TableRow>
+                            <TableCell colSpan={10} sx={{ border: `2px solid ${borderColor}`, py: 0.5, backgroundColor: settings?.header_color || "#1976d2", color: "white" }}>
+                                <Box
+                                    display="flex"
+                                    justifyContent="flex-end"
+                                    alignItems="center"
+                                    gap={1}
+                                    flexWrap="wrap"
+                                >
+                                    <Button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            minWidth: 80,
+                                            color: "white",
+                                            borderColor: "white",
+                                            backgroundColor: "transparent",
+                                            '&:hover': {
+                                                borderColor: 'white',
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                            },
+                                            '&.Mui-disabled': {
+                                                color: "white",
+                                                borderColor: "white",
+                                                backgroundColor: "transparent",
+                                                opacity: 1,
+                                            }
+                                        }}
+                                    >
+                                        First
+                                    </Button>
+
+                                    <Button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            minWidth: 80,
+                                            color: "white",
+                                            borderColor: "white",
+                                            backgroundColor: "transparent",
+                                            '&:hover': {
+                                                borderColor: 'white',
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                            },
+                                            '&.Mui-disabled': {
+                                                color: "white",
+                                                borderColor: "white",
+                                                backgroundColor: "transparent",
+                                                opacity: 1,
+                                            }
+                                        }}
+                                    >
+                                        Prev
+                                    </Button>
+
+
+                                    {/* Page Dropdown */}
+                                    <FormControl size="small" sx={{ minWidth: 80 }}>
+                                        <Select
+                                            value={currentPage}
+                                            onChange={(e) => setCurrentPage(Number(e.target.value))}
+                                            displayEmpty
+                                            sx={{
+                                                fontSize: '12px',
+                                                height: 36,
+                                                color: 'white',
+                                                border: '1px solid white',
+                                                backgroundColor: 'transparent',
+                                                '.MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'white',
+                                                },
+                                                '& svg': {
+                                                    color: 'white', // dropdown arrow icon color
+                                                }
+                                            }}
+                                            MenuProps={{
+                                                PaperProps: {
+                                                    sx: {
+                                                        maxHeight: 200,
+                                                        backgroundColor: '#fff', // dropdown background
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            {Array.from({ length: totalPages }, (_, i) => (
+                                                <MenuItem key={i + 1} value={i + 1}>
+                                                    Page {i + 1}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <Typography fontSize="11px" color="white">
+                                        of {totalPages} page{totalPages > 1 ? 's' : ''}
+                                    </Typography>
+
+
+                                    {/* Next & Last */}
+                                    <Button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            minWidth: 80,
+                                            color: "white",
+                                            borderColor: "white",
+                                            backgroundColor: "transparent",
+                                            '&:hover': {
+                                                borderColor: 'white',
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                            },
+                                            '&.Mui-disabled': {
+                                                color: "white",
+                                                borderColor: "white",
+                                                backgroundColor: "transparent",
+                                                opacity: 1,
+                                            }
+                                        }}
+                                    >
+                                        Next
+                                    </Button>
+
+                                    <Button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            minWidth: 80,
+                                            color: "white",
+                                            borderColor: "white",
+                                            backgroundColor: "transparent",
+                                            '&:hover': {
+                                                borderColor: 'white',
+                                                backgroundColor: 'rgba(255,255,255,0.1)',
+                                            },
+                                            '&.Mui-disabled': {
+                                                color: "white",
+                                                borderColor: "white",
+                                                backgroundColor: "transparent",
+                                                opacity: 1,
+                                            }
+                                        }}
+                                    >
+                                        Last
+                                    </Button>
+
+                                </Box>
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                </Table>
+            </TableContainer>
+
+            <br />
+             <br />
+            {/* ===== ADD / EDIT FORM ===== */}
+            <TableContainer
+                component={Paper}
+                sx={{
+                    width: "100%",
+
+                    margin: "0 auto",
+                    border: `2px solid ${borderColor}`,
+                    mb: 4,
+                }}
+            >
+                <Table size="small">
                     <TableHead
                         sx={{
                             backgroundColor: settings?.header_color || "#1976d2",
@@ -609,359 +1040,201 @@ const VerifyDocumentsSchedule = () => {
                                 sx={{
                                     color: "white",
                                     textAlign: "center",
-                                    fontWeight: "bold",
+
+                                    padding: "12px",
+                                    border: `1px solid ${borderColor}`,
                                 }}
                             >
-                                {editingSchedule ? "UPDATE SCHEDULE" : "ADD SCHEDULE"}
+                                Verify Document Schedule Management
                             </TableCell>
                         </TableRow>
                     </TableHead>
 
                     <TableBody>
                         <TableRow>
-                            <TableCell>
-                                {/* ===== MAIN CONTENT ===== */}
-                                <Grid container spacing={4}>
-                                    <Grid item xs={12}>
-                                        <form onSubmit={handleSubmit}>
-                                            <Grid container spacing={2}>
+                            <TableCell sx={{ p: 3 }}>
+                                <form onSubmit={handleSubmit}>
+                                    <Grid container spacing={3}>
 
-                                                <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        label="Branch"
-                                                        value={selectedBranch}
-                                                        onChange={(e) => setSelectedBranch(e.target.value)}
-                                                        required
-                                                    >
-                                                        {branches.map((b) => (
-                                                            <MenuItem key={b.id} value={b.branch}>
-                                                                {b.branch}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
+                                        {/* Branch */}
+                                        <Grid item xs={12} md={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Branch
+                                            </Typography>
+                                            <TextField
+                                                select
+                                                fullWidth
+                                                size="small"
+                                                value={selectedBranch}
+                                                onChange={(e) => setSelectedBranch(e.target.value)}
+                                                required
+                                            >
+                                                {branches.map((b) => (
+                                                    <MenuItem key={b.id} value={b.branch}>
+                                                        {b.branch}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Grid>
 
-                                                <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        type="date"
-                                                        label="Exam Date"
-                                                        InputLabelProps={{ shrink: true }}
-                                                        value={day}
-                                                        inputProps={{ min: minDate, max: maxDate }}
-                                                        onChange={(e) => setDay(e.target.value)}
-                                                        required
-                                                    />
-                                                </Grid>
+                                        {/* Exam Date */}
+                                        <Grid item xs={12} md={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Exam Date
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                type="date"
+                                                value={day}
+                                                inputProps={{ min: minDate, max: maxDate }}
+                                                onChange={(e) => setDay(e.target.value)}
+                                                required
+                                            />
+                                        </Grid>
 
-                                                <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        label="Building"
-                                                        value={buildingName}
-                                                        onChange={(e) => setBuildingName(e.target.value)}
-                                                        required
-                                                    >
-                                                        {[...new Set(
-                                                            rooms
-                                                                .map((r) => r.building_description)
-                                                                .filter(Boolean)
-                                                        )].map((b, i) => (
-                                                            <MenuItem key={i} value={b}>
-                                                                {b}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
+                                        {/* Building */}
+                                        <Grid item xs={12} md={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Building
+                                            </Typography>
+                                            <TextField
+                                                select
+                                                fullWidth
+                                                size="small"
+                                                value={buildingName}
+                                                onChange={(e) => setBuildingName(e.target.value)}
+                                                required
+                                            >
+                                                {[...new Set(
+                                                    rooms
+                                                        .map((r) => r.building_description)
+                                                        .filter(Boolean)
+                                                )].map((b, i) => (
+                                                    <MenuItem key={i} value={b}>
+                                                        {b}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </Grid>
 
-                                                <Grid item xs={12} md={6}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        label="Room"
-                                                        value={roomId}
-                                                        onChange={(e) => setRoomId(e.target.value)}
-                                                        required
-                                                    >
-                                                        {rooms
-                                                            .filter(
-                                                                (r) =>
-                                                                    r.building_description === buildingName
-                                                            )
-                                                            .map((r) => (
-                                                                <MenuItem
-                                                                    key={r.room_id}
-                                                                    value={r.room_id}
-                                                                >
-                                                                    {r.room_description}
-                                                                </MenuItem>
-                                                            ))}
-                                                    </TextField>
-                                                </Grid>
+                                        {/* Room */}
+                                        <Grid item xs={12} md={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Room
+                                            </Typography>
+                                            <TextField
+                                                select
+                                                fullWidth
+                                                size="small"
+                                                value={roomId}
+                                                onChange={(e) => setRoomId(e.target.value)}
+                                                required
+                                            >
+                                                {rooms
+                                                    .filter(
+                                                        (r) =>
+                                                            r.building_description === buildingName
+                                                    )
+                                                    .map((r) => (
+                                                        <MenuItem
+                                                            key={r.room_id}
+                                                            value={r.room_id}
+                                                        >
+                                                            {r.room_description}
+                                                        </MenuItem>
+                                                    ))}
+                                            </TextField>
+                                        </Grid>
 
-                                                <Grid item xs={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Start Time"
-                                                        type="time"
-                                                        InputLabelProps={{ shrink: true }}
-                                                        value={startTime}
-                                                        onChange={(e) => setStartTime(e.target.value)}
-                                                        required
-                                                    />
-                                                </Grid>
+                                        {/* Start Time */}
+                                        <Grid item xs={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Start Time
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                type="time"
+                                                value={startTime}
+                                                onChange={(e) => setStartTime(e.target.value)}
+                                                required
+                                            />
+                                        </Grid>
 
-                                                <Grid item xs={6}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="End Time"
-                                                        type="time"
-                                                        InputLabelProps={{ shrink: true }}
-                                                        value={endTime}
-                                                        onChange={(e) => setEndTime(e.target.value)}
-                                                        required
-                                                    />
-                                                </Grid>
+                                        {/* End Time */}
+                                        <Grid item xs={6}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                End Time
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                type="time"
+                                                value={endTime}
+                                                onChange={(e) => setEndTime(e.target.value)}
+                                                required
+                                            />
+                                        </Grid>
 
-                                                <Grid item xs={12}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Evaluator"
-                                                        value={evaluator}
-                                                        onChange={(e) => setEvaluator(e.target.value)}
-                                                        required
-                                                    />
-                                                </Grid>
+                                        {/* Evaluator */}
+                                        <Grid item xs={12}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Evaluator
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                value={evaluator}
+                                                onChange={(e) => setEvaluator(e.target.value)}
+                                                required
+                                            />
+                                        </Grid>
 
-                                                <Grid item xs={12}>
-                                                    <TextField
-                                                        fullWidth
-                                                        label="Room Quota"
-                                                        type="number"
-                                                        inputProps={{ min: 1 }}
-                                                        value={roomQuota}
-                                                        onChange={(e) => setRoomQuota(e.target.value)}
-                                                        required
-                                                    />
-                                                </Grid>
+                                        {/* Room Quota */}
+                                        <Grid item xs={12}>
+                                            <Typography fontWeight="600" mb={0.5}>
+                                                Room Quota
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                type="number"
+                                                inputProps={{ min: 1 }}
+                                                value={roomQuota}
+                                                onChange={(e) => setRoomQuota(e.target.value)}
+                                                required
+                                            />
+                                        </Grid>
 
-                                                <Grid item xs={12} textAlign="center">
-                                                    <Button
-                                                        type="submit"
-                                                        variant="contained"
-                                                        sx={{
-                                                            px: 6,
-                                                            py: 1.5,
-                                                            bgcolor: "#1967d2",
-                                                            "&:hover": { bgcolor: "#000" },
-                                                        }}
-                                                    >
-                                                        {editingSchedule
-                                                            ? "Update Schedule"
-                                                            : "Save Schedule"}
-                                                    </Button>
-                                                </Grid>
-                                            </Grid>
-                                        </form>
+                                        {/* Submit */}
+                                        <Grid item xs={12} textAlign="center" mt={2}>
+                                            <Button
+                                                type="submit"
+                                                variant="contained"
+                                                sx={{
+                                                    px: 6,
+                                                    py: 1,
+                                                    fontWeight: "bold",
+
+                                                }}
+                                            >
+                                                {editingSchedule
+                                                    ? "Update Schedule"
+                                                    : "Save Schedule"}
+                                            </Button>
+                                        </Grid>
+
                                     </Grid>
-                                </Grid>
+                                </form>
                             </TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
             </TableContainer>
 
-            {/* ===== EXISTING SCHEDULES ===== */}
-            <Grid item xs={12} md={8}>
-                <TableContainer
-                    component={Paper}
-                    sx={{
-                        width: "100%",
-                        border: `2px solid ${borderColor}`,
-                    }}
-                >
-                    <Table>
 
-                        {/* ===== HEADER ===== */}
-                        <TableHead
-                            sx={{
-                                backgroundColor: settings?.header_color || "#1976d2",
-                            }}
-                        >
-                            <TableRow>
-                                <TableCell
-                                    colSpan={9}
-                                    sx={{
-                                        color: "white",
-                                        textAlign: "center",
-                                        fontWeight: "bold",
-                                        fontSize: "18px",
-                                    }}
-                                >
-                                    EXISTING SCHEDULES
-                                </TableCell>
-                            </TableRow>
 
-                            <TableRow>
-                                {[
-                                    "Branch",
-                                    "Date",
-                                    "Building",
-                                    "Room",
-                                    "Start Time",
-                                    "End Time",
-                                    "Evaluator",
-                                    "Quota",
-                                    "Actions",
-                                ].map((header) => (
-                                    <TableCell
-                                        key={header}
-                                        sx={{
-                                            color: "white",
-                                            fontWeight: "bold",
-                                            textAlign: "center",
-                                            border: `1px solid ${borderColor}`,
-                                        }}
-                                    >
-                                        {header}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        </TableHead>
-
-                        {/* ===== FILTER SECTION ===== */}
-                        <TableBody>
-
-                            {/* FILTER ROW */}
-                            <TableRow>
-                                <TableCell colSpan={9}>
-                                    <Box display="flex" gap={2} flexWrap="wrap">
-
-                                        <TextField
-                                            select
-                                            label="Select Campus"
-                                            value={selectedCampusFilter}
-                                            onChange={(e) =>
-                                                setSelectedCampusFilter(e.target.value)
-                                            }
-                                            sx={{ minWidth: 200 }}
-                                        >
-                                            <MenuItem value="">All Campus</MenuItem>
-                                            {branches.map((b) => (
-                                                <MenuItem key={b.id} value={b.branch}>
-                                                    {b.branch}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-
-                                        <TextField
-                                            select
-                                            label="Select Month"
-                                            value={selectedMonth}
-                                            onChange={(e) => {
-                                                setSelectedMonth(e.target.value);
-                                                setSelectedDate("");
-                                            }}
-                                            sx={{ minWidth: 200 }}
-                                        >
-                                            <MenuItem value="">All Months</MenuItem>
-                                            {Array.from({ length: 12 }).map((_, i) => (
-                                                <MenuItem key={i + 1} value={i + 1}>
-                                                    {new Date(0, i).toLocaleString("default", {
-                                                        month: "long",
-                                                    })}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-
-                                        <TextField
-                                            select
-                                            label="Select Exam Date"
-                                            value={selectedDate}
-                                            onChange={(e) =>
-                                                setSelectedDate(e.target.value)
-                                            }
-                                            disabled={!selectedMonth}
-                                            sx={{ minWidth: 220 }}
-                                        >
-                                            <MenuItem value="">All Dates</MenuItem>
-                                            {availableDates.map((date) => (
-                                                <MenuItem key={date} value={date}>
-                                                    {formatDate(date)}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-
-                                    </Box>
-                                </TableCell>
-                            </TableRow>
-
-                            {/* DATA ROWS */}
-                            {filteredSchedules.map((s) => (
-                                <TableRow
-                                    key={`${s.id}-${s.day_description}-${s.room_description}`}
-                                >
-                                    <TableCell align="center">{s.branch}</TableCell>
-                                    <TableCell align="center">
-                                        {formatDate(s.schedule_date)}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {s.building_description}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {s.room_description}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {formatTime(s.start_time)}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {formatTime(s.end_time)}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {s.evaluator}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {s.room_quota}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: "green",
-                                                color: "white",
-                                                mr: 1,
-                                            }}
-                                            onClick={() => handleEdit(s)}
-                                        >
-                                            Edit
-                                        </Button>
-
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            sx={{
-                                                backgroundColor: "#9E0000",
-                                                color: "white",
-                                            }}
-                                            onClick={() => {
-                                                setScheduleToDelete(s);
-                                                setOpenDeleteDialog(true);
-                                            }}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Grid>
 
             {/* ===== DELETE CONFIRM DIALOG ===== */}
             <Dialog
@@ -1078,7 +1351,7 @@ const VerifyDocumentsSchedule = () => {
                 </Alert>
             </Snackbar>
 
-        </Box>
+        </Box >
     );
 
 };

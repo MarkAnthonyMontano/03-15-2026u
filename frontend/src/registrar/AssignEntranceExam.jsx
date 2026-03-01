@@ -8,7 +8,11 @@ import {
   TableRow,
   TableCell,
   Snackbar,
+  FormControl,
+  InputLabel,
+  Select,
   Alert,
+  TableBody
 } from "@mui/material";
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
@@ -161,9 +165,9 @@ const AssignEntranceExam = () => {
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/active_school_year`)
-    .then(res => {
-      setSchoolYearId(res.data[0]?.school_year_id);
-    });
+      .then(res => {
+        setSchoolYearId(res.data[0]?.school_year_id);
+      });
   }, []);
 
   useEffect(() => {
@@ -225,7 +229,7 @@ const AssignEntranceExam = () => {
 
 
   const filteredSchedules = schedules.filter((s) => {
-    const scheduleMonth = new Date(s.day_description).getMonth() + 1;
+    const scheduleMonth = new Date(s.schedule_date).getMonth() + 1;
 
     const matchesCampus =
       !selectedCampusFilter || s.branch === selectedCampusFilter;
@@ -234,7 +238,7 @@ const AssignEntranceExam = () => {
       !selectedMonth || scheduleMonth === Number(selectedMonth);
 
     const matchesDate =
-      !selectedDate || s.day_description === selectedDate;
+      !selectedDate || s.schedule_date === selectedDate;
 
     const matchesSearch =
       !searchQuery ||
@@ -244,6 +248,23 @@ const AssignEntranceExam = () => {
 
     return matchesCampus && matchesMonth && matchesDate && matchesSearch;
   });
+
+
+  // ===== PAGINATION =====
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 20; // change if needed
+
+  const totalPages = Math.ceil(filteredSchedules.length / rowsPerPage);
+
+  const paginatedSchedules = filteredSchedules.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedMonth, selectedDate, selectedCampusFilter]);
 
   const handleSaveSchedule = async () => {
     const sel = rooms.find(r => String(r.room_id) === String(roomId));
@@ -402,6 +423,24 @@ const AssignEntranceExam = () => {
     });
   };
 
+  const cellStyle = {
+    border: `2px solid ${borderColor}`,
+    padding: "6px",
+    fontSize: "0.85rem",
+  };
+
+  const whiteSelectStyle = {
+    minWidth: 150,
+    "& .MuiOutlinedInput-root": {
+      color: "white",
+      "& fieldset": { borderColor: "white" },
+      "&:hover fieldset": { borderColor: "white" },
+      "&.Mui-focused fieldset": { borderColor: "white" },
+    },
+    "& .MuiSvgIcon-root": {
+      color: "white",
+    },
+  };
 
 
   if (loading || hasAccess === null) {
@@ -514,230 +553,566 @@ const AssignEntranceExam = () => {
       <br />
       <br />
 
-      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, mb: "40px" }}>
-        <Table>
-          <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2", }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          width: "100%",
+          border: `2px solid ${borderColor}`,
+        }}
+      >
+        <Table size="small">
+
+          {/* ===== TOP HEADER WITH FILTERS ===== */}
+          <TableHead>
+            <TableRow
+              sx={{
+                backgroundColor: settings?.header_color || "#1976d2",
+              }}
+            >
+              <TableCell
+                colSpan={9}
+                sx={{
+                  border: `2px solid ${borderColor}`,
+                  py: 1,
+                  color: "white",
+                }}
+              >
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  gap={2}
+                >
+                  <Typography fontSize="15px" fontWeight="bold" color="white">
+                    EXISTING SCHEDULES ({filteredSchedules.length})
+                  </Typography>
+
+                  <Box display="flex" gap={1.5} flexWrap="wrap">
+
+                    {/* Campus */}
+                    <TextField
+                      select
+                      size="small"
+                      value={selectedCampusFilter}
+                      onChange={(e) => setSelectedCampusFilter(e.target.value)}
+                      SelectProps={{
+                        displayEmpty: true,
+                        renderValue: (selected) => {
+                          if (!selected) {
+                            return <span style={{ color: "white", opacity: 0.7 }}>Select Campus</span>;
+                          }
+                          return selected;
+                        },
+                      }}
+                      sx={whiteSelectStyle}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Campus
+                      </MenuItem>
+                      <MenuItem value="">All Campus</MenuItem>
+                      {branches.map((b) => (
+                        <MenuItem key={b.id} value={b.branch}>
+                          {b.branch}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      size="small"
+                      value={selectedMonth}
+                      onChange={(e) => {
+                        setSelectedMonth(e.target.value);
+                        setSelectedDate("");
+                      }}
+                      SelectProps={{
+                        displayEmpty: true,
+                        renderValue: (selected) => {
+                          if (!selected) {
+                            return <span style={{ color: "white", opacity: 0.7 }}>Select Month</span>;
+                          }
+                          return new Date(0, selected - 1).toLocaleString("default", {
+                            month: "long",
+                          });
+                        },
+                      }}
+                      sx={whiteSelectStyle}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Month
+                      </MenuItem>
+                      <MenuItem value="">All Months</MenuItem>
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <MenuItem key={i + 1} value={i + 1}>
+                          {new Date(0, i).toLocaleString("default", { month: "long" })}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+
+                    <TextField
+                      select
+                      size="small"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      disabled={!selectedMonth}
+                      SelectProps={{
+                        displayEmpty: true,
+                        renderValue: (selected) => {
+                          if (!selected) {
+                            return <span style={{ color: "white", opacity: 0.7 }}>Select Date</span>;
+                          }
+                          return formatDate(selected);
+                        },
+                      }}
+                      sx={whiteSelectStyle}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Date
+                      </MenuItem>
+                      <MenuItem value="">All Dates</MenuItem>
+                      {availableDates.map((date) => (
+                        <MenuItem key={date} value={date}>
+                          {formatDate(date)}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Box>
+                </Box>
+              </TableCell>
+            </TableRow>
+
+            {/* COLUMN HEADERS */}
             <TableRow>
-              <TableCell sx={{ color: 'white', textAlign: "Center" }}>Entrance Exam Schedule Management</TableCell>
+              {[
+                "Campus",
+                "Date",
+                "Building",
+                "Room",
+                "Start",
+                "End",
+                "Proctor",
+                "Quota",
+                "Actions",
+              ].map((header) => (
+                <TableCell
+                  key={header}
+                  align="center"
+                  sx={{
+                    border: `2px solid ${borderColor}`,
+                    fontWeight: "600",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {header}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {paginatedSchedules.map((s) => (
+              <TableRow key={`${s.id}-${s.day_description}`}>
+                <TableCell align="center" sx={cellStyle}>{s.branch}</TableCell>
+                <TableCell align="center" sx={cellStyle}>{formatDate(s.day_description)}</TableCell>
+                <TableCell align="center" sx={cellStyle}>{s.building_description}</TableCell>
+                <TableCell align="center" sx={cellStyle}>{s.room_description}</TableCell>
+                <TableCell align="center" sx={cellStyle}> {formatTime(s.start_time)}</TableCell>
+                <TableCell align="center" sx={cellStyle}>{formatTime(s.end_time)}</TableCell>
+                <TableCell align="center" sx={cellStyle} >{s.proctor}</TableCell>
+                <TableCell align="center" sx={cellStyle}>{s.room_quota}</TableCell>
+                <TableCell align="center">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    sx={{ backgroundColor: "green", mr: 1 }}
+                    onClick={() => handleEdit(s)}
+                  >
+                    Edit
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="contained"
+                    sx={{ backgroundColor: "#9E0000" }}
+                    onClick={() => {
+                      setScheduleToDelete(s);
+                      setOpenDeleteDialog(true);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+
+        </Table>
+      </TableContainer>
+
+      <TableContainer component={Paper} sx={{ width: '100%', }}>
+        <Table size="small">
+          <TableHead sx={{ backgroundColor: '#6D2323', color: "white" }}>
+            <TableRow>
+              <TableCell colSpan={10} sx={{ border: `2px solid ${borderColor}`, py: 0.5, backgroundColor: settings?.header_color || "#1976d2", color: "white" }}>
+                <Box
+                  display="flex"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  gap={1}
+                  flexWrap="wrap"
+                >
+                  <Button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      minWidth: 80,
+                      color: "white",
+                      borderColor: "white",
+                      backgroundColor: "transparent",
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                      },
+                      '&.Mui-disabled': {
+                        color: "white",
+                        borderColor: "white",
+                        backgroundColor: "transparent",
+                        opacity: 1,
+                      }
+                    }}
+                  >
+                    First
+                  </Button>
+
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      minWidth: 80,
+                      color: "white",
+                      borderColor: "white",
+                      backgroundColor: "transparent",
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                      },
+                      '&.Mui-disabled': {
+                        color: "white",
+                        borderColor: "white",
+                        backgroundColor: "transparent",
+                        opacity: 1,
+                      }
+                    }}
+                  >
+                    Prev
+                  </Button>
+
+
+                  {/* Page Dropdown */}
+                  <FormControl size="small" sx={{ minWidth: 80 }}>
+                    <Select
+                      value={currentPage}
+                      onChange={(e) => setCurrentPage(Number(e.target.value))}
+                      displayEmpty
+                      sx={{
+                        fontSize: '12px',
+                        height: 36,
+                        color: 'white',
+                        border: '1px solid white',
+                        backgroundColor: 'transparent',
+                        '.MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'white',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'white',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'white',
+                        },
+                        '& svg': {
+                          color: 'white', // dropdown arrow icon color
+                        }
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            maxHeight: 200,
+                            backgroundColor: '#fff', // dropdown background
+                          }
+                        }
+                      }}
+                    >
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <MenuItem key={i + 1} value={i + 1}>
+                          Page {i + 1}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <Typography fontSize="11px" color="white">
+                    of {totalPages} page{totalPages > 1 ? 's' : ''}
+                  </Typography>
+
+
+                  {/* Next & Last */}
+                  <Button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      minWidth: 80,
+                      color: "white",
+                      borderColor: "white",
+                      backgroundColor: "transparent",
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                      },
+                      '&.Mui-disabled': {
+                        color: "white",
+                        borderColor: "white",
+                        backgroundColor: "transparent",
+                        opacity: 1,
+                      }
+                    }}
+                  >
+                    Next
+                  </Button>
+
+                  <Button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      minWidth: 80,
+                      color: "white",
+                      borderColor: "white",
+                      backgroundColor: "transparent",
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                      },
+                      '&.Mui-disabled': {
+                        color: "white",
+                        borderColor: "white",
+                        backgroundColor: "transparent",
+                        opacity: 1,
+                      }
+                    }}
+                  >
+                    Last
+                  </Button>
+
+                </Box>
+              </TableCell>
             </TableRow>
           </TableHead>
         </Table>
       </TableContainer>
 
+
+      <br />
       <br />
 
-      <Grid container spacing={4}>
-        {/* ===== ADD / EDIT FORM ===== */}
-        <Grid item xs={12} md={4}>
-          <Paper elevation={6} sx={{ p: 3, border: `2px solid ${borderColor}` }}>
-            <Typography variant="h6" fontWeight="bold" textAlign="center" mb={3} sx={{ color: subtitleColor }}>
-              {editingSchedule ? "UPDATE SCHEDULE" : "ADD SCHEDULE"}
-            </Typography>
+      <TableContainer
+        component={Paper}
+        sx={{
+          border: `2px solid ${borderColor}`,
+        }}
+      >
+        <Table size="small">
+          <TableHead
+            sx={{
+              backgroundColor: settings?.header_color || "#1976d2",
+            }}
+          >
+            <TableRow>
+              <TableCell
+                sx={{
+                  color: "white",
+                  textAlign: "center",
 
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-
-                <Grid item xs={12}>
-                  <TextField
-                    select
-                    fullWidth
-                    label="Campus / Branch"
-                    value={selectedBranch}
-                    onChange={(e) => setSelectedBranch(e.target.value)}
-                    required
-                  >
-                    {branches.map((b) => (
-                      <MenuItem key={b.id} value={b.branch}>
-                        {b.branch}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-
-
-                <Grid item xs={12}>
-                  <TextField fullWidth type="date" label="Exam Date"
-                    InputLabelProps={{ shrink: true }}
-                    value={day}
-                    inputProps={{ min: minDate, max: maxDate }}
-                    onChange={(e) => setDay(e.target.value)}
-                    required />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField select fullWidth label="Building"
-                    value={buildingName}
-                    onChange={(e) => setBuildingName(e.target.value)} required>
-                    {[...new Set(rooms.map(r => r.building_description).filter(Boolean))]
-                      .map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
-                  </TextField>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField select fullWidth label="Room"
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)} required>
-                    {rooms.filter(r => r.building_description === buildingName)
-                      .map(r => (
-                        <MenuItem key={r.room_id} value={r.room_id}>
-                          {r.room_description}
-                        </MenuItem>
-                      ))}
-                  </TextField>
-                </Grid>
-
-                <Grid item xs={6}>
-                  <TextField fullWidth type="time" label="Start Time"
-                    InputLabelProps={{ shrink: true }}
-                    value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-                </Grid>
-
-                <Grid item xs={6}>
-                  <TextField fullWidth type="time" label="End Time"
-                    InputLabelProps={{ shrink: true }}
-                    value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField fullWidth label="Proctor"
-                    value={proctor} onChange={(e) => setProctor(e.target.value)} />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField fullWidth type="number" label="Room Quota"
-                    value={roomQuota} onChange={(e) => setRoomQuota(e.target.value)} />
-                </Grid>
-
-                <Grid item xs={12} textAlign="center">
-                  <Button type="submit" variant="contained"
-                    sx={{ px: 6, py: 1.5, bgcolor: "#1967d2", "&:hover": { bgcolor: "#000" } }}>
-                    {editingSchedule ? "Update Schedule" : "Save Schedule"}
-                  </Button>
-                </Grid>
-
-              </Grid>
-            </form>
-          </Paper>
-        </Grid>
-
-        {/* ===== SCHEDULE LIST ===== */}
-        <Grid item xs={12} md={8}>
-          <Paper elevation={6} sx={{ p: 3, border: `2px solid ${borderColor}` }}>
-            <Typography variant="h6" fontWeight="bold" textAlign="center" mb={2} sx={{ color: subtitleColor }}>
-              EXISTING SCHEDULES
-            </Typography>
-
-            {/* ===== FILTER & SEARCH BOX ===== */}
-            <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-
-              <TextField
-                select
-                label="Select Campus"
-                value={selectedCampusFilter}
-                onChange={(e) => setSelectedCampusFilter(e.target.value)}
-                sx={{ minWidth: 200 }}
-              >
-                <MenuItem value="">All Campus</MenuItem>
-                {branches.map((b) => (
-                  <MenuItem key={b.id} value={b.branch}>
-                    {b.branch}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              {/* 📆 Month Selector */}
-              <TextField
-                select
-                label="Select Month"
-                value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  setSelectedDate(""); // reset date when month changes
+                  padding: "12px",
+                  border: `1px solid ${borderColor}`,
                 }}
-                sx={{ minWidth: 200 }}
               >
-                <MenuItem value="">All Months</MenuItem>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <MenuItem key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("default", { month: "long" })}
-                  </MenuItem>
-                ))}
-              </TextField>
+                Entrance Exam Schedule Management
+              </TableCell>
+            </TableRow>
+          </TableHead>
 
-              {/* 📅 Date Selector */}
-              <TextField
-                select
-                label="Select Exam Date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                disabled={!selectedMonth}
-                sx={{ minWidth: 220 }}
-              >
-                <MenuItem value="">All Dates</MenuItem>
-                {availableDates.map((date) => (
-                  <MenuItem key={date} value={date}>
-                    {formatDate(date)}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
+          <TableBody>
+            <TableRow>
+              <TableCell sx={{ p: 3 }}>
+                <form onSubmit={handleSubmit}>
+                  <Grid container spacing={2}>
 
-            {/* TABLE */}
-            <Box sx={{ maxHeight: 520, overflowY: "auto" }}>
-              <table width="100%" style={{ borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ backgroundColor: settings?.header_color || "#1976d2", color: "#ffffff" }}>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Campus</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Date</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Building</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Room</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Start</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>End</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Proctor</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Quota</th>
-                    <th style={{ border: `2px solid ${borderColor}`, width: "33.33%", padding: "12px 8px" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSchedules.map(s => (
-                    <tr key={`${s.id}-${s.day_description}-${s.room_description}`}>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{s.branch}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{formatDate(s.day_description)}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{s.building_description}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{s.room_description}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{formatTime(s.start_time)}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}> {formatTime(s.end_time)}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{s.proctor}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>{s.room_quota}</td>
-                      <td style={{ border: `2px solid ${borderColor}`, padding: "12px 8px", textAlign: "center" }}>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{ backgroundColor: "green", color: "white", mr: 1 }}
-                          onClick={() => handleEdit(s)}  // no change needed here
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          sx={{ backgroundColor: "#9E0000", color: "white" }}
-                          onClick={() => {
-                            setScheduleToDelete(s);   // store schedule temporarily
-                            setOpenDeleteDialog(true); // open dialog
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+                    {/* Branch */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Campus / Branch
+                      </Typography>
+                      <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        value={selectedBranch}
+                        onChange={(e) => setSelectedBranch(e.target.value)}
+                        required
+                      >
+                        {branches.map((b) => (
+                          <MenuItem key={b.id} value={b.branch}>
+                            {b.branch}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+
+                    {/* Date */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Exam Date
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="date"
+                        value={day}
+                        inputProps={{ min: minDate, max: maxDate }}
+                        onChange={(e) => setDay(e.target.value)}
+                        required
+                      />
+                    </Grid>
+
+                    {/* Building */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Building
+                      </Typography>
+                      <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        value={buildingName}
+                        onChange={(e) => setBuildingName(e.target.value)}
+                        required
+                      >
+                        {[...new Set(
+                          rooms.map(r => r.building_description).filter(Boolean)
+                        )].map((b) => (
+                          <MenuItem key={b} value={b}>{b}</MenuItem>
+                        ))}
+                      </TextField>
+                    </Grid>
+
+                    {/* Room */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Room
+                      </Typography>
+                      <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        value={roomId}
+                        onChange={(e) => setRoomId(e.target.value)}
+                        required
+                      >
+                        {rooms
+                          .filter(r => r.building_description === buildingName)
+                          .map(r => (
+                            <MenuItem key={r.room_id} value={r.room_id}>
+                              {r.room_description}
+                            </MenuItem>
+                          ))}
+                      </TextField>
+                    </Grid>
+
+                    {/* Start / End */}
+                    <Grid item xs={6}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Start Time
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
+                    </Grid>
+
+                    <Grid item xs={6}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        End Time
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
+                    </Grid>
+
+                    {/* Proctor */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Proctor
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        value={proctor}
+                        onChange={(e) => setProctor(e.target.value)}
+                      />
+                    </Grid>
+
+                    {/* Quota */}
+                    <Grid item xs={12}>
+                      <Typography fontWeight="600" mb={0.5}>
+                        Room Quota
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        value={roomQuota}
+                        onChange={(e) => setRoomQuota(e.target.value)}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} textAlign="center" mt={2}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        sx={{
+                          px: 6,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {editingSchedule ? "Update Schedule" : "Save Schedule"}
+                      </Button>
+                    </Grid>
+
+                  </Grid>
+                </form>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+
+
+
 
       <Snackbar
         open={openSnackbar}

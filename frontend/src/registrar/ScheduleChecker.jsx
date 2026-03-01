@@ -1555,6 +1555,18 @@ const ScheduleChecker = () => {
         </Snackbar>
       )}
 
+      <br />
+      <br />
+      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}` }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2", }}>
+                <TableRow>
+                  <TableCell sx={{ color: 'white', textAlign: "Center" }}>Existing Schedule</TableCell>
+                </TableRow>
+              </TableHead>
+            </Table>
+          </TableContainer>
+
       <Box sx={{ display: "flex", gap: "1rem" }}>
         <Box>
           <form
@@ -1565,9 +1577,9 @@ const ScheduleChecker = () => {
               border: `2px solid ${borderColor}`,
               backgroundColor: "white",
               padding: "2rem",
-              borderRadius: "8px",
+           
               boxShadow: "0px 0px 10px rgba(0,0,0,0.1)",
-              marginTop: "1rem",
+           
             }}
           >
             {/* Day */}
