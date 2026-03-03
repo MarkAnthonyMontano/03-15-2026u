@@ -35,6 +35,8 @@ import API_BASE_URL from "../apiConfig";
 import CampaignIcon from '@mui/icons-material/Campaign';
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const VerifyDocumentsSchedule = () => {
 
@@ -739,7 +741,7 @@ const VerifyDocumentsSchedule = () => {
                                     >
                                         {/* LEFT SIDE */}
                                         <Typography fontSize="14px" fontWeight="bold" color="white">
-                                           Total Rooms: ({filteredSchedules.length})
+                                            Total Rooms: ({filteredSchedules.length})
                                         </Typography>
 
                                         {/* RIGHT SIDE */}
@@ -974,26 +976,58 @@ const VerifyDocumentsSchedule = () => {
                                     {s.room_quota}
                                 </TableCell>
                                 <TableCell align="center" sx={cellStyle}>
-                                    <Button
-                                        size="small"
-                                        variant="contained"
-                                        sx={{ backgroundColor: "green", mr: 1 }}
-                                        onClick={() => handleEdit(s)}
-                                    >
-                                        Edit
-                                    </Button>
-
-                                    <Button
-                                        size="small"
-                                        variant="contained"
-                                        sx={{ backgroundColor: "#9E0000" }}
-                                        onClick={() => {
-                                            setScheduleToDelete(s);
-                                            setOpenDeleteDialog(true);
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            gap: 1,              // spacing between buttons
+                                            flexWrap: "nowrap",  // prevents wrapping
                                         }}
                                     >
-                                        Delete
-                                    </Button>
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            sx={{
+                                                backgroundColor: "green",
+                                                color: "white",
+                                                borderRadius: "5px",
+                                                width: "100px",
+                                                height: "40px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "5px",
+                                            }}
+                                            onClick={() => handleEdit(s)}
+                                        >
+                                            <EditIcon fontSize="small" />
+                                            Edit
+                                        </Button>
+
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            sx={{
+                                                backgroundColor: "#9E0000",
+                                                color: "white",
+                                                borderRadius: "5px",
+                                                width: "100px",
+                                                height: "40px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "5px",
+                                            }}
+                                            onClick={() => {
+                                                setScheduleToDelete(s);
+                                                setOpenDeleteDialog(true);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                            Delete
+                                        </Button>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -1188,8 +1222,8 @@ const VerifyDocumentsSchedule = () => {
             <TableContainer
                 component={Paper}
                 sx={{
-                     border: `2px solid ${borderColor}`,
-          width: "50%"
+                    border: `2px solid ${borderColor}`,
+                    width: "50%"
                 }}
             >
                 <Table size="small">

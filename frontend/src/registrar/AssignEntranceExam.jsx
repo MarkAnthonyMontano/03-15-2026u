@@ -33,6 +33,9 @@ import API_BASE_URL from "../apiConfig";
 import CampaignIcon from '@mui/icons-material/Campaign';
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";  
+
 
 
 const AssignEntranceExam = () => {
@@ -896,26 +899,56 @@ const AssignEntranceExam = () => {
                   <TableCell align="center" sx={cellStyle} >{s.proctor}</TableCell>
                   <TableCell align="center" sx={cellStyle}>{s.room_quota}</TableCell>
                   <TableCell align="center" sx={cellStyle}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      sx={{ backgroundColor: "green", mr: 1 }}
-                      onClick={() => handleEdit(s)}
-                    >
-                      Edit
-                    </Button>
-
-                    <Button
-                      size="small"
-                      variant="contained"
-                      sx={{ backgroundColor: "#9E0000" }}
-                      onClick={() => {
-                        setScheduleToDelete(s);
-                        setOpenDeleteDialog(true);
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: 1,
+                        flexWrap: "nowrap",
                       }}
                     >
-                      Delete
-                    </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{
+                              backgroundColor: "green",
+        color: "white",
+        borderRadius: "5px",
+        width: "100px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "5px",
+                        }}
+                        onClick={() => handleEdit(s)}
+                      >
+                       <EditIcon fontSize="small" /> Edit
+                      </Button>
+
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "#9E0000",
+        color: "white",
+        borderRadius: "5px",
+        width: "100px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "5px",
+                        }}
+                        onClick={() => {
+                          setScheduleToDelete(s);
+                          setOpenDeleteDialog(true);
+                        }}
+                      >
+                     <DeleteIcon fontSize="small" /> Delete
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

@@ -311,6 +311,7 @@ const ScheduleHoverTile = () => {
             </Box>
 
             <br />
+            <br />
             <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, }}>
                 <Table>
                     <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2" }}>

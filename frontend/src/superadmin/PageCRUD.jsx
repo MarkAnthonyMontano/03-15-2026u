@@ -30,6 +30,9 @@ import { IoMdAddCircle } from "react-icons/io";
 import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
 
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
 
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -291,7 +294,7 @@ const PageCRUD = () => {
 
 
     return (
-          <Box sx={{ height: "calc(100vh - 150px)", overflowY: "auto", paddingRight: 1, backgroundColor: "transparent", mt: 1, padding: 2 }}>
+        <Box sx={{ height: "calc(100vh - 150px)", overflowY: "auto", paddingRight: 1, backgroundColor: "transparent", mt: 1, padding: 2 }}>
             <Box
                 sx={{
                     display: 'flex',
@@ -370,8 +373,14 @@ const PageCRUD = () => {
                                             {page.page_group}
                                         </TableCell>
                                         <TableCell
-                                            style={{ border: `2px solid ${borderColor}` }}
                                             align="center"
+                                            sx={{
+                                                border: `2px solid ${borderColor}`,
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                gap: "10px",
+                                            }}
                                         >
                                             <Button
                                                 variant="contained"
@@ -379,25 +388,39 @@ const PageCRUD = () => {
                                                 sx={{
                                                     backgroundColor: "green",
                                                     color: "white",
-                                                    marginRight: 1,
-
+                                                    borderRadius: "5px",
+                                                    padding: "8px 14px",
+                                                    width: "100px",
+                                                    height: "40px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    gap: "5px",
                                                 }}
                                                 onClick={() => handleEdit(page)}
                                             >
-                                                Edit
+                                                <EditIcon fontSize="small" /> Edit
                                             </Button>
-                                            {/* <Button
+
+                                            <Button
                                                 variant="contained"
                                                 size="small"
                                                 sx={{
-                                                    backgroundColor: "#B22222",
+                                                    backgroundColor: "#9E0000",
                                                     color: "white",
-                                                    "&:hover": { backgroundColor: "#8B0000" },
+                                                    borderRadius: "5px",
+                                                    padding: "8px 14px",
+                                                    width: "100px",
+                                                    height: "40px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    gap: "5px",
                                                 }}
                                                 onClick={() => handleDelete(page.id)}
                                             >
-                                                Delete
-                                            </Button> */}
+                                                <DeleteIcon fontSize="small" /> Delete
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))

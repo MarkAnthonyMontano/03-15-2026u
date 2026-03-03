@@ -146,8 +146,7 @@ const AdmissionDashboardPanel = () => {
         { title: "PROCTOR'S APPLICANT LIST", link: "/admission_schedule_room_list", icon: People, page_id: 33 },
         { title: "ANNOUNCEMENT FOR ADMISSION", link: "/announcement_for_admission", icon: CampaignIcon, page_id: 98 },
         { title: "PROGRAM SLOT REMAINING", link: "/program_slot_limit", icon: People, page_id: 110 },
-        { title: "EVALUATOR SCHEDULE MANAGEMENT", link: "/evaluator_schedule_room_list", icon: People, page_id: 119 }
-
+       
       ],
     },
 

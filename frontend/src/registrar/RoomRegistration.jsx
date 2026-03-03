@@ -38,6 +38,9 @@ import KeyIcon from "@mui/icons-material/Key";
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { useNavigate } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
 
 
 const RoomRegistration = () => {
@@ -783,32 +786,56 @@ const RoomRegistration = () => {
                       {AIRCON_OPTIONS.find((a) => a.value === Number(room.is_airconditioned))?.label || "N/A"}
                     </TableCell>
 
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>
+                    <TableCell
+                      sx={{
+                        border: `2px solid ${borderColor}`,
+                        textAlign: "center",
+                        width: "250px",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "10px", // space between buttons
+                      }}
+                    >
                       <Button
                         variant="contained"
                         size="small"
                         sx={{
                           backgroundColor: "green",
                           color: "white",
-                          mr: 1,
+                          borderRadius: "5px",
+                          padding: "8px 14px",
+                          width: "100px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "5px",
                         }}
                         onClick={() => handleEditRoom(room)}
                       >
-                        Edit
+                        <EditIcon fontSize="small" /> Edit
                       </Button>
+
                       <Button
                         variant="contained"
                         size="small"
                         sx={{
                           backgroundColor: "#9E0000",
                           color: "white",
+                          borderRadius: "5px",
+                          padding: "8px 14px",
+                          width: "100px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "5px",
                         }}
                         onClick={() => {
                           setRoomToDelete(room);
                           setOpenDeleteDialog(true);
                         }}
                       >
-                        Delete
+                        <DeleteIcon fontSize="small" /> Delete
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -918,8 +945,8 @@ const RoomRegistration = () => {
 
       </Grid>
 
-      <br/>
-      <br/>
+      <br />
+      <br />
 
 
       <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, }}>
@@ -1047,7 +1074,7 @@ const RoomRegistration = () => {
 
       </Grid>
 
-    
+
 
       <Dialog open={openTypeDialog} onClose={() => setOpenTypeDialog(false)}>
         <DialogTitle>Add New Room Type</DialogTitle>

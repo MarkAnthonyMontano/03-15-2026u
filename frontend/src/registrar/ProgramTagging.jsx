@@ -1133,7 +1133,7 @@ const ProgramTagging = () => {
                         textAlign: "center"
                       }}
                     >
-                     # 
+                      #
                     </th>
 
 
@@ -1320,7 +1320,7 @@ const ProgramTagging = () => {
                             border: "none",
                             borderRadius: "5px",
                             padding: "8px 14px",
-                            marginRight: "6px",
+
                             cursor: "pointer",
                             width: "100px",
                             height: "40px",
@@ -1328,6 +1328,8 @@ const ProgramTagging = () => {
                             alignItems: "center",
                             justifyContent: "center",
                             gap: "5px",
+
+
                           }}
                         >
                           <EditIcon fontSize="small" /> Edit
@@ -1340,6 +1342,7 @@ const ProgramTagging = () => {
                             setOpenDeleteDialog(true);
                           }}
                           style={{
+
                             backgroundColor: "#9E0000",
                             color: "white",
                             border: "none",

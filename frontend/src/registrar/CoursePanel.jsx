@@ -35,6 +35,8 @@ import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
 import API_BASE_URL from "../apiConfig";
 import SearchIcon from "@mui/icons-material/Search";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const CoursePanel = () => {
   const settings = useContext(SettingsContext);
@@ -849,15 +851,22 @@ const CoursePanel = () => {
                         onClick={() => handleEdit(c)}
                         style={{
                           backgroundColor: "green",
-                          color: "#fff",
+                          color: "white",
                           border: "none",
-                          padding: "6px 10px",
-                          width: "100px",
-                          borderRadius: 4,
+                          borderRadius: "5px",
+                          padding: "8px 14px",
+                         
                           cursor: "pointer",
+                          width: "100px",
+                          height: "40px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "5px",
+
                         }}
                       >
-                        Edit
+                        <EditIcon fontSize="small" /> Edit
                       </button>
                       <button
                         onClick={() => {
@@ -865,16 +874,22 @@ const CoursePanel = () => {
                           setOpenDeleteDialog(true);
                         }}
                         style={{
+
                           backgroundColor: "#9E0000",
-                          color: "#fff",
+                          color: "white",
                           border: "none",
-                          width: "100px",
-                          padding: "6px 10px",
-                          borderRadius: 4,
+                          borderRadius: "5px",
+                          padding: "8px 14px",
                           cursor: "pointer",
+                          width: "100px",
+                          height: "40px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "5px",
                         }}
                       >
-                        Delete
+                        <DeleteIcon fontSize="small" /> Delete
                       </button>
 
                     </div>

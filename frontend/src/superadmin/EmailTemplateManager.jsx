@@ -29,6 +29,8 @@ import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
 import API_BASE_URL from "../apiConfig";
 const API = `${API_BASE_URL}/api/email-templates`;
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 
 export default function EmailTemplateManager() {
@@ -306,8 +308,131 @@ export default function EmailTemplateManager() {
 
       <hr style={{ border: "1px solid #ccc", width: "100%" }} />
       <br />
+      <br />
+      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2", }}>
+            <TableRow>
+              <TableCell sx={{ color: 'white', textAlign: "Center" }}>Existing Email Accounts</TableCell>
+            </TableRow>
+          </TableHead>
+        </Table>
+      </TableContainer>
+      {/* ✅ Table Section */}
+      <Grid item xs={12} md={7}>
+        <Paper
+          elevation={3}
+          sx={{ p: 3, border: `2px solid ${borderColor}`, }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, color: subtitleColor, }}>
+            Registered Templates
+          </Typography>
 
-      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, mb: "40px" }}>
+          <Box
+            sx={{
+              maxHeight: 400,
+              overflowY: "auto",
+              backgroundColor: settings?.table_bg_color || "#ffffff", // Table container bg
+              border: `2px solid ${borderColor}`, // Outer border
+              borderRadius: 1, // optional: rounded corners
+            }}
+          >
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow
+                  sx={{
+                    backgroundColor: settings?.header_color || "#1976d2", // Header color from settings
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>#</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Gmail Account</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Department</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Active</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff", textAlign: "center" }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ border: `2px solid ${borderColor}` }}>
+                      No templates found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((r, index) => (
+                    <TableRow key={r.template_id}>
+                      <TableCell sx={{ border: `2px solid ${borderColor}` }}>{index + 1}</TableCell>
+                      <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.sender_name}</TableCell>
+                      <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.department_name || "N/A"}</TableCell>
+                      <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.is_active ? "Yes" : "No"}</TableCell>
+                      <TableCell sx={{ width: "150px", border: `2px solid ${borderColor}` }}>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            sx={{
+                              backgroundColor: "green",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              padding: "8px 14px",
+
+                              cursor: "pointer",
+                              width: "100px",
+                              height: "40px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "5px",
+
+                            }}
+                            onClick={() => handleEdit(r)}
+                          >
+                            <EditIcon fontSize="small" /> Edit
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="small"
+                            sx={{
+                              backgroundColor: "#9E0000",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              padding: "8px 14px",
+                              cursor: "pointer",
+                              width: "100px",
+                              height: "40px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "5px",
+
+                            }}
+                            onClick={() => {
+                              setTemplateToDelete(r);
+                              setOpenDeleteDialog(true);
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" /> Delete
+                          </Button>
+
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Box>
+
+        </Paper>
+
+      </Grid>
+
+      <br />
+      <br />
+      <TableContainer component={Paper} sx={{ width: '100%', border: `2px solid ${borderColor}`, }}>
         <Table>
           <TableHead sx={{ backgroundColor: settings?.header_color || "#1976d2", }}>
             <TableRow>
@@ -319,164 +444,77 @@ export default function EmailTemplateManager() {
 
 
 
-      <Grid container spacing={4}>
+      <Grid item xs={12} md={7}>
         {/* ✅ Form Section */}
-        <Grid item xs={12} md={5}>
-          <Paper
-            elevation={3}
-            sx={{ p: 3, border: `2px solid ${borderColor}`,}}
+
+        <Paper
+          elevation={3}
+          sx={{ p: 3, border: `2px solid ${borderColor}`, }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, color: subtitleColor, }}>
+            {editing ? "Edit Email Template" : "Register New Template"}
+          </Typography>
+
+          <Typography fontWeight={500}>Sender Name:</Typography>
+          <TextField
+            fullWidth
+            label="Sender Name"
+            variant="outlined"
+            value={form.sender_name}
+            onChange={(e) =>
+              setForm({ ...form, sender_name: e.target.value })
+            }
+            sx={{ mb: 2 }}
+          />
+          <Typography fontWeight={500}>Department:</Typography>
+          <TextField
+            select
+            fullWidth
+
+            value={form.department_id || ""}
+            onChange={(e) => setForm({ ...form, department_id: e.target.value })}
+            sx={{ mb: 2 }}
+            SelectProps={{ native: true }}
           >
-            <Typography variant="h6" sx={{ mb: 2, color: subtitleColor, }}>
-              {editing ? "Edit Email Template" : "Register New Template"}
-            </Typography>
-
-            <Typography fontWeight={500}>Sender Name:</Typography>
-            <TextField
-              fullWidth
-              label="Sender Name"
-              variant="outlined"
-              value={form.sender_name}
-              onChange={(e) =>
-                setForm({ ...form, sender_name: e.target.value })
-              }
-              sx={{ mb: 2 }}
-            />
-            <Typography fontWeight={500}>Department:</Typography>
-            <TextField
-              select
-              fullWidth
-
-              value={form.department_id || ""}
-              onChange={(e) => setForm({ ...form, department_id: e.target.value })}
-              sx={{ mb: 2 }}
-              SelectProps={{ native: true }}
-            >
-              <option value="">Select Department</option>
-              {departments.map((d) => (
-                <option key={d.dprtmnt_id} value={d.dprtmnt_id}>
-                  {d.dprtmnt_name}
-                </option>
-              ))}
-            </TextField>
+            <option value="">Select Department</option>
+            {departments.map((d) => (
+              <option key={d.dprtmnt_id} value={d.dprtmnt_id}>
+                {d.dprtmnt_name}
+              </option>
+            ))}
+          </TextField>
 
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.is_active}
-                  onChange={(e) =>
-                    setForm({ ...form, is_active: e.target.checked })
-                  }
-                />
-              }
-              label="Active"
-              sx={{ mb: 2 }}
-            />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.is_active}
+                onChange={(e) =>
+                  setForm({ ...form, is_active: e.target.checked })
+                }
+              />
+            }
+            label="Active"
+            sx={{ mb: 2 }}
+          />
 
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={editing ? handleUpdate : handleAdd}
-              sx={{
-                backgroundColor: "#1967d2",
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={editing ? handleUpdate : handleAdd}
+            sx={{
+              backgroundColor: "#1967d2",
 
-                "&:hover": { backgroundColor: "#000000" },
-              }}
-            >
-              {editing ? "Update Template" : "Save"}
-            </Button>
-          </Paper>
-        </Grid>
-
-        {/* ✅ Table Section */}
-        <Grid item xs={12} md={7}>
-          <Paper
-            elevation={3}
-            sx={{ p: 3, border: `2px solid ${borderColor}`, }}
+              "&:hover": { backgroundColor: "#000000" },
+            }}
           >
-            <Typography variant="h6" sx={{ mb: 2, color: subtitleColor, }}>
-              Registered Templates
-            </Typography>
-
-            <Box
-              sx={{
-                maxHeight: 400,
-                overflowY: "auto",
-                backgroundColor: settings?.table_bg_color || "#ffffff", // Table container bg
-                border: `2px solid ${borderColor}`, // Outer border
-                borderRadius: 1, // optional: rounded corners
-              }}
-            >
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow
-                    sx={{
-                      backgroundColor: settings?.header_color || "#1976d2", // Header color from settings
-                    }}
-                  >
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>#</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Gmail Account</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Department</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Active</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff", textAlign: "center" }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {rows.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ border: `2px solid ${borderColor}` }}>
-                        No templates found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    rows.map((r, index) => (
-                      <TableRow key={r.template_id}>
-                        <TableCell sx={{ border: `2px solid ${borderColor}` }}>{index + 1}</TableCell>
-                        <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.sender_name}</TableCell>
-                        <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.department_name || "N/A"}</TableCell>
-                        <TableCell sx={{ border: `2px solid ${borderColor}` }}>{r.is_active ? "Yes" : "No"}</TableCell>
-                        <TableCell sx={{ width: "150px", border: `2px solid ${borderColor}` }}>
-                          <Box sx={{ display: "flex", gap: 1 }}>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              sx={{
-                                backgroundColor: "green",
-                                color: "white",
-
-                              }}
-                              onClick={() => handleEdit(r)}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              sx={{
-                                backgroundColor: "#B22222",
-                                color: "white",
-                              }}
-                              onClick={() => {
-                                setTemplateToDelete(r);
-                                setOpenDeleteDialog(true);
-                              }}
-                            >
-                              Delete
-                            </Button>
-
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </Box>
-
-          </Paper>
-        </Grid>
+            {editing ? "Update Template" : "Save"}
+          </Button>
+        </Paper>
       </Grid>
+      <br />
+      <br />
+
 
       <Dialog
         open={openDeleteDialog}

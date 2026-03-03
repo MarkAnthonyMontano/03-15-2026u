@@ -417,7 +417,7 @@ export default function DepartmentCurriculumPanel() {
                   <TableCell sx={{ color: "#fff", border: `2px solid ${borderColor}`, textAlign: "center", }}>ID</TableCell>
                   <TableCell sx={{ color: "#fff", border: `2px solid ${borderColor}`, textAlign: "center", }}>Department</TableCell>
                   <TableCell sx={{ color: "#fff", border: `2px solid ${borderColor}`, textAlign: "center", }}>Program Code / Description</TableCell>
-                  {/* <TableCell sx={{ color: "#fff", border: `2px solid ${borderColor}`, textAlign: "center", }}>Action</TableCell> */}
+                  <TableCell sx={{ color: "#fff", border: `2px solid ${borderColor}`, textAlign: "center", }}>Action</TableCell>
                 </TableRow>
               </TableHead>
 
@@ -445,7 +445,7 @@ export default function DepartmentCurriculumPanel() {
                       </TableCell>
 
                       {/* Actions */}
-                      {/* <TableCell sx={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>
+                      <TableCell sx={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>
                         <Button
                           variant="contained"
                           size="small"
@@ -470,7 +470,7 @@ export default function DepartmentCurriculumPanel() {
                         >
                           Delete
                         </Button>
-                      </TableCell> */}
+                      </TableCell>
 
 
                     </TableRow>
