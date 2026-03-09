@@ -309,9 +309,6 @@ const ProgramTagging = () => {
     }
   };
 
-
-
-
   const handleChangesForEverything = (e) => {
     const { name, value, type } = e.target;
 
@@ -402,7 +399,7 @@ const ProgramTagging = () => {
           )
         );
 
-
+        fetchTaggedPrograms();
 
         setSnackbar({
           open: true,
@@ -441,6 +438,7 @@ const ProgramTagging = () => {
           },
         ]);
 
+        fetchTaggedPrograms();
         setSnackbar({
           open: true,
           message: "Program tag inserted successfully!",
@@ -485,7 +483,7 @@ const ProgramTagging = () => {
       course_id: program.course_id,
       lec_fee: program.lec_fee ?? "",
       lab_fee: program.lab_fee ?? "",
-      iscomputer_lab: program.iscomputer_lab ?? 0,
+      iscomputer_lab: program.  iscomputer_lab ?? 0,
       islaboratory_fee: program.islaboratory_fee ?? 0,
       is_nstp: program.is_nstp ?? 0,
       amount: program.amount ?? 0,

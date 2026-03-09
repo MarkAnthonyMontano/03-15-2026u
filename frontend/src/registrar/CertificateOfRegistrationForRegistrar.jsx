@@ -1836,7 +1836,7 @@ const CertificateOfRegistration = forwardRef(
                       <td colSpan={6} style={{ fontSize: "40%" }}>
                         <input
                           type="text"
-                          value={savedUnifast ? "Unifast " : ""}
+                          value={savedUnifast ? "UNIFAST-FHE" : ""}
                           readOnly
                           style={{
                             fontFamily: "Arial, sans-serif",

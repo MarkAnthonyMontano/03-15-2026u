@@ -633,83 +633,83 @@ router.post("/request-otp", async (req, res) => {
 
 // ========================== OTP SETTINGS ===========================
 
-// // GET OTP SETTING (1 or 0)
-// router.get("/get-otp-setting/:person_id", async (req, res) => {
-//   const { person_id } = req.params;
+// GET OTP SETTING (1 or 0)
+router.get("/get-otp-setting/:person_id", async (req, res) => {
+  const { person_id } = req.params;
 
-//   try {
-//     const [rows] = await db3.query(
-//       "SELECT require_otp FROM user_accounts WHERE person_id = ?",
-//       [person_id]
-//     );
+  try {
+    const [rows] = await db3.query(
+      "SELECT require_otp FROM user_accounts WHERE person_id = ?",
+      [person_id]
+    );
 
-//     if (rows.length === 0) {
-//       return res.json({ require_otp: 0 });
-//     }
+    if (rows.length === 0) {
+      return res.json({ require_otp: 0 });
+    }
 
-//     res.json({ require_otp: rows[0].require_otp });
-//   } catch (err) {
-//     console.error("OTP fetch error:", err);
-//     res.status(500).json({ message: "Server error loading OTP setting" });
-//   }
-// });
+    res.json({ require_otp: rows[0].require_otp });
+  } catch (err) {
+    console.error("OTP fetch error:", err);
+    res.status(500).json({ message: "Server error loading OTP setting" });
+  }
+});
 
-// // GET OTP SETTING FOR ALL ROLES
-// router.get("/get-otp-setting/:type/:person_id", async (req, res) => {
-//   const { type, person_id } = req.params;
+// GET OTP SETTING FOR ALL ROLES
+router.get("/get-otp-setting/:type/:person_id", async (req, res) => {
+  const { type, person_id } = req.params;
 
-//   if (!person_id || !type) return res.status(400).json({ message: "Missing parameters" });
+  if (!person_id || !type) return res.status(400).json({ message: "Missing parameters" });
 
-//   let table;
-//   if (type === "user") table = "user_accounts";
-//   else if (type === "prof") table = "prof_table";
-//   else return res.status(400).json({ message: "Invalid type" });
+  let table;
+  if (type === "user") table = "user_accounts";
+  else if (type === "prof") table = "prof_table";
+  else return res.status(400).json({ message: "Invalid type" });
 
-//   try {
-//     const [rows] = await db3.query(
-//       `SELECT require_otp FROM ${table} WHERE person_id = ? LIMIT 1`,
-//       [person_id]
-//     );
+  try {
+    const [rows] = await db3.query(
+      `SELECT require_otp FROM ${table} WHERE person_id = ? LIMIT 1`,
+      [person_id]
+    );
 
-//     if (rows.length === 0) return res.json({ require_otp: 0 });
+    if (rows.length === 0) return res.json({ require_otp: 0 });
 
-//     res.json({ require_otp: Number(rows[0].require_otp) === 1 ? 1 : 0 });
-//   } catch (err) {
-//     console.error("OTP fetch error:", err);
-//     res.status(500).json({ message: "Server error loading OTP setting" });
-//   }
-// });
+    res.json({ require_otp: Number(rows[0].require_otp) === 1 ? 1 : 0 });
+  } catch (err) {
+    console.error("OTP fetch error:", err);
+    res.status(500).json({ message: "Server error loading OTP setting" });
+  }
+});
 
-// // POST TOGGLE ON/OFF OTP
-// router.post("/update-otp-setting", async (req, res) => {
-//   const { type, person_id, require_otp } = req.body;
+// POST TOGGLE ON/OFF OTP
+router.post("/update-otp-setting", async (req, res) => {
+  const { type, person_id, require_otp } = req.body;
 
-//   if (!person_id || !type) return res.status(400).json({ message: "Missing parameters" });
+  if (!person_id || !type) return res.status(400).json({ message: "Missing parameters" });
 
-//   let table;
-//   if (type === "user") table = "user_accounts";
-//   else if (type === "prof") table = "prof_table";
-//   else return res.status(400).json({ message: "Invalid type" });
+  let table;
+  if (type === "user") table = "user_accounts";
+  else if (type === "prof") table = "prof_table";
+  else return res.status(400).json({ message: "Invalid type" });
 
-//   try {
-//     const [result] = await db3.query(
-//       `UPDATE ${table} SET require_otp = ? WHERE person_id = ?`,
-//       [require_otp, person_id]
-//     );
+  try {
+    const [result] = await db3.query(
+      `UPDATE ${table} SET require_otp = ? WHERE person_id = ?`,
+      [require_otp, person_id]
+    );
 
-//     if (result.affectedRows === 0) return res.status(404).json({ message: "User not found" });
+    if (result.affectedRows === 0) return res.status(404).json({ message: "User not found" });
 
-//     res.json({
-//       success: true,
-//       message: require_otp == 1
-//         ? "OTP has been enabled for your account."
-//         : "OTP has been disabled for your account."
-//     });
-//   } catch (err) {
-//     console.error("Failed to update OTP:", err);
-//     res.status(500).json({ message: "Server error updating OTP setting" });
-//   }
-// });
+    res.json({
+      success: true,
+      message: require_otp == 1
+        ? "OTP has been enabled for your account."
+        : "OTP has been disabled for your account."
+    });
+  } catch (err) {
+    console.error("Failed to update OTP:", err);
+    res.status(500).json({ message: "Server error updating OTP setting" });
+  }
+});
 
 
 module.exports = router;
