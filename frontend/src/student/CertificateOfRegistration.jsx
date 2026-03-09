@@ -180,7 +180,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
       const res = await axios.get(`${API_BASE_URL}/api/user/${person_id}`);
       if (res.data && res.data.profile_img) {
         console.log(res.data.profile_img);
-        setProfilePicture(`${API_BASE_URL}/uploads/${res.data.profile_img}`);
+        setProfilePicture(`${API_BASE_URL}/uploads/Student1by1/${res.data.profile_img}`);
       }
     } catch (error) {
       console.error("Error fetching profile picture:", error);
@@ -333,6 +333,10 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
   const [course_unit, setCourseUnit] = useState(null);
   const [lab_unit, setLabUnit] = useState(null);
   const [year_desc, setYearDescription] = useState(null);
+  const [savedUnifast, setSavedUnifast] = useState(false);
+  const [savedMatriculation, setSavedMatriculation] = useState(false);
+  const [isPaymentStatusLoaded, setIsPaymentStatusLoaded] = useState(false);
+  const [selectedPaymentData, setSelectedPaymentData] = useState(null);
 
   useEffect(() => {
     if (!student_number || !student_number.trim()) return; // don't run if empty
@@ -422,6 +426,91 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
 
     fetchStudent();
   }, [student_number]); // 🔑 runs automatically when prop changes
+
+  useEffect(() => {
+    if (!student_number || !student_number.trim()) {
+      setSavedUnifast(false);
+      setSavedMatriculation(false);
+      setIsPaymentStatusLoaded(false);
+      return;
+    }
+    setIsPaymentStatusLoaded(false);
+
+    const fetchPaymentStatus = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/payment-status/${student_number}`);
+        if (res.data?.success) {
+          setSavedUnifast(!!res.data.saved_unifast);
+          setSavedMatriculation(!!res.data.saved_matriculation);
+        } else {
+          setSavedUnifast(false);
+          setSavedMatriculation(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch payment status:", error);
+        setSavedUnifast(false);
+        setSavedMatriculation(false);
+      } finally {
+        setIsPaymentStatusLoaded(true);
+      }
+    };
+
+    fetchPaymentStatus();
+  }, [student_number]);
+
+  useEffect(() => {
+    if (!student_number || !student_number.trim() || !isPaymentStatusLoaded) {
+      setSelectedPaymentData(null);
+      return;
+    }
+
+    if (!savedUnifast && !savedMatriculation) {
+      setSelectedPaymentData(null);
+      return;
+    }
+
+    const endpoint = savedUnifast
+      ? "/get_student_data_unifast"
+      : "/get_student_data_matriculation";
+
+    const fetchPaymentData = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}${endpoint}`);
+        const rows = Array.isArray(res.data) ? res.data : [];
+
+        const matched = rows
+          .filter(
+            (item) =>
+              String(item?.student_number) === String(student_number) &&
+              Number(item?.status) === 1,
+          )
+          .sort((a, b) => Number(b?.id || 0) - Number(a?.id || 0));
+
+        setSelectedPaymentData(matched[0] || null);
+      } catch (error) {
+        console.error("Failed to fetch payment data:", error);
+        setSelectedPaymentData(null);
+      }
+    };
+
+    fetchPaymentData();
+  }, [student_number, savedUnifast, savedMatriculation, isPaymentStatusLoaded]);
+
+  const formatFee = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return "";
+    return numeric.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const scholarshipDiscountValue = savedUnifast
+    ? "UNIFAST-FHE"
+    : (selectedPaymentData?.matriculation_remark || "");
+  const officialReceiptValue = savedUnifast
+    ? "Scholar"
+    : (selectedPaymentData?.matriculation_remark ? "Scholar" : "");
 
   // Fetch all departments when component mounts
   useEffect(() => {
@@ -1044,7 +1133,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                       <input type="text" value={"Scholarship/Discount:"} readOnly style={{ fontWeight: "bold", color: "black", fontFamily: 'Arial, sans-serif', fontSize: '12px', width: "98%", border: "none", outline: "none", background: "none" }} />
                     </td>
                     <td colSpan={6} style={{ fontSize: "62.5%" }}>
-                      <input type="text" readOnly style={{ fontFamily: "Arial, sans-serif", color: "black", width: "98%", fontSize: "12px", border: "none", outline: "none", background: "none" }} />
+                      <input type="text" value={scholarshipDiscountValue} readOnly style={{ fontFamily: "Arial, sans-serif", color: "black", width: "98%", fontSize: "12px", border: "none", outline: "none", background: "none" }} />
                     </td>
                   </tr>
 
@@ -1568,6 +1657,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.tuition_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1643,6 +1733,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.athletic_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1720,6 +1811,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.cultural_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1800,6 +1892,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.development_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1880,6 +1973,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.guidance_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1960,6 +2054,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.library_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2013,6 +2108,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.medical_and_dental_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2091,6 +2187,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.registration_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2157,6 +2254,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.computer_fees)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2306,6 +2404,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={formatFee(selectedPaymentData?.total_tosf)}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -3092,7 +3191,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
-                        value={"Scholar"}
+                        value={officialReceiptValue}
                         readOnly
                         style={{
                           color: "black",
@@ -3130,15 +3229,17 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                 <tbody>
                   <tr>
                     <td style={{ width: "50%", textAlign: "center" }}>
-                      <img
-                        src={FreeTuitionImage}
-                        alt="EARIST MIS FEE"
-                        style={{
-                          marginLeft: "75px",
-                          width: "200px", // Corrected unit
-                          height: "150px",
-                        }}
-                      />
+                      {savedUnifast && (
+                        <img
+                          src={FreeTuitionImage}
+                          alt="EARIST MIS FEE"
+                          style={{
+                            marginLeft: "75px",
+                            width: "200px", // Corrected unit
+                            height: "150px",
+                          }}
+                        />
+                      )}
                     </td>
                   </tr>
 
