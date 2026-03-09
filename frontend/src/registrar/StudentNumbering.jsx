@@ -523,6 +523,41 @@ const StudentNumbering = () => {
         setOpenModal(true);
     };
 
+    const buildAcceptanceEmailPreview = () => {
+        const companyShort = shortTerm || "SCHOOL";
+        const schoolName = companyName || "our school";
+        const firstName = selectedPerson?.first_name || "";
+        const middleName = selectedPerson?.middle_name || "";
+        const lastName = selectedPerson?.last_name || "";
+        const emailAddress = selectedPerson?.emailAddress || "";
+        const loginUrl =
+            typeof window !== "undefined" ? `${window.location.origin}/login` : "/login";
+
+        const senderEmail =
+            (typeof import.meta !== "undefined" && import.meta.env?.VITE_EMAIL_USER) ||
+            "EMAIL_USER";
+
+        return `from: "${companyShort} Enrollment Office" <${senderEmail}>
+to: ${emailAddress}
+subject: 🎓 Welcome to ${schoolName} - Acceptance Confirmation
+
+Hi, ${firstName} ${middleName || ""} ${lastName},
+
+🎉 Congratulations! You are now officially accepted and part of the ${schoolName} community.
+
+Please visit your respective college offices to tag your schedule to your account and obtain your class schedule.
+
+Your Student Number is: [Assigned after confirmation]
+Your Email Address is: ${emailAddress}
+
+Your temporary password is: [Generated automatically]
+
+You may change your password and keep it secure.
+
+👉 Click the link below to log in:
+${loginUrl}`;
+    };
+
     const [userEmail, setUserEmail] = useState("");
 
     // fetch logged-in user email once (e.g. from localStorage or auth context)
@@ -538,6 +573,7 @@ const StudentNumbering = () => {
             socket.current.once("assign-student-number-result", (data) => {
                 if (data.success) {
                     setAssignedNumber(data.student_number);
+                    setOpenModal(false);
                     setSnack({
                         open: true,
                         message: " Student number assigned and email sent.",
@@ -1061,7 +1097,7 @@ const StudentNumbering = () => {
                             <Button
                                 variant="contained"
                                 sx={{ marginTop: "15px" }}
-                                onClick={confirmAssignNumber}   // 👈 directly run the assign logic
+                                onClick={openAssignModal}
                             >
                                 Assign Student Number
                             </Button>
@@ -1273,6 +1309,36 @@ const StudentNumbering = () => {
                     {snack.message}
                 </Alert>
             </Snackbar>
+
+            <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ color: "maroon", fontWeight: "bold" }}>
+                    Acceptance Email Preview
+                </DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ mb: 1.5, fontSize: 13, color: "#555" }}>
+                        Review the email content before assigning the student number.
+                    </Typography>
+                    <TextField
+                        multiline
+                        fullWidth
+                        minRows={16}
+                        value={buildAcceptanceEmailPreview()}
+                        InputProps={{ readOnly: true }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenModal(false)} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={confirmAssignNumber}
+                        variant="contained"
+                        sx={{ backgroundColor: settings?.header_color || "#1976d2" }}
+                    >
+                        Confirm Assign & Send Email
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

@@ -275,7 +275,7 @@ const ProgramTagging = () => {
 
   useEffect(() => {
     fetchCourse();
-  });
+  }, []);
 
   const fetchTaggedPrograms = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,219 +19,220 @@ import axios from "axios";
 import "./App.css";
 
 // COMPONENTS FOLDER
-import Unauthorized from './components/Unauthorized';
-import Register from './components/Register';
-import Login from './components/Login';
-import LoginEnrollment from './components/LoginEnrollment';
-import ApplicantForgotPassword from './components/ApplicantForgotPassword';
-import RegistrarForgotPassword from './components/RegistrarForgotPassword';
-import SideBar from './components/Sidebar';
 import ProtectedRoute, { isTokenValid } from './components/ProtectedRoute';
-import ApplicantProfile from './components/ApplicantProfile';
-import ApplicantProfilePermit from './components/ApplicantProfile';
-import AnnouncementSlider from "./components/AnnouncementSlider";
 
 // PAGES FOLDER
-import CourseManagement from './pages/CourseManagement';
-import DepartmentManagement from './pages/DepartmentDashboard';
-import AdmissionDashboardPanel from './pages/AdmissionDashboard';
-import SystemDashboardPanel from './pages/SystemDashboard';
-import StudentDashboard from './pages/StudentDashboard';
-import FacultyDashboard from './pages/FacultyDashboard'; //For Professors & Faculty Members
-import RegistrarDashboard from './pages/RegistrarDashboard'; // For SuperAdmin & Admin
-import ApplicantDashboard from './pages/ApplicantDashboard';
-import AccountDashboard from './pages/AccountDashboard';
-import ScheduleFilterer from './pages/SchedulePlottingFilter';
-import HistoryLogs from './pages/HistoryLogs';
-import EnrollmentOfficerDashboard from './pages/EnrollmentOfficerDashboard';
-import AdmissionOfficerDashboard from './pages/AdmissionOfficerDashboard';
-import StudentQrInfo from './pages/StudentQrInfo';
 
 // FACULTY FOLDER
-import GradingSheet from './faculty/GradingSheet';
-import FacultyWorkload from './faculty/FacultyWorkload';
-import FacultyMasterList from './faculty/FacultyMasterlist';
-import ProgramEvaluation from './registrar/ProgramEvaluation';
-import FacultyResetPassword from './faculty/FacultyResetPassword';
-import FacultyEvaluation from './faculty/FacultyEvaluation';
 
 // REGISTRAR FOLDER
-import SearchCertificateOfRegistration from './registrar/SearchCertificateOfRegistration';
-import AdminECATApplicationForm from './registrar/AdminECATApplicationForm';
-import AdminPersonalDataForm from './registrar/AdminPersonalDataForm';
-import AdminOfficeOfTheRegistrar from './registrar/AdminOfficeOfTheRegistrar';
-import AdminAdmissionFormProcess from "./registrar/AdminAdmissionFormProcess";
-import AdminDashboard1 from './registrar/AdminDashboard1';
-import AdminDashboard2 from './registrar/AdminDashboard2';
-import AdminDashboard3 from './registrar/AdminDashboard3';
-import AdminDashboard4 from './registrar/AdminDashboard4';
-import AdminDashboard5 from './registrar/AdminDashboard5';
-import RegistrarDashboard1 from './registrar/RegistrarDashboard1';
-import RegistrarDashboard2 from './registrar/RegistrarDashboard2';
-import RegistrarDashboard3 from './registrar/RegistrarDashboard3';
-import RegistrarDashboard4 from './registrar/RegistrarDashboard4';
-import RegistrarDashboard5 from './registrar/RegistrarDashboard5';
-import ApplicantList from './registrar/ApplicantList';
-import ApplicantListAdmin from './registrar/ApplicantListAdmin';
-import StudentRequirements from './registrar/StudentRequirements';
-import RegistrarRequirements from './registrar/RegistrarRequirements';
-import RegistrarExaminationProfile from './registrar/RegistrarExaminationProfile';
-import AssignScheduleToApplicants from './registrar/AssignScheduleToApplicants';
-import AssignEntranceExam from './registrar/AssignEntranceExam';
-import AdmissionScheduleTile from './registrar/AdmissionScheduleTile';
-import EnrollmentScheduleTile from './registrar/EnrollmentScheduleTile';
-import ProctorApplicantList from './registrar/ProctorApplicantList';
-import ApplicantScoring from './registrar/ApplicantScoring';
-import QualifyingInterviewExamScore from './registrar/QualifyingInterviewExamScore';
-import QualifyingInterviewerApplicantList from './registrar/QualifyingInterviewerApplicantList';
-import AssignQualifyingInterviewExam from './registrar/AssignQualifyingInterviewExam';
-import AssignScheduleToApplicantsQualifyingInterviewer from './registrar/AssignScheduleToApplicantsQualifyingInterviewer';
-import ClassRoster from './registrar/ClassRoster';
-import DepartmentRegistration from './registrar/DprtmntRegistration';
-import DepartmentRoom from './registrar/DprtmntRoom';
-import ProgramTagging from './registrar/ProgramTagging';
-import CoursePanel from './registrar/CoursePanel';
-import ProgramPanel from './registrar/ProgramPanel';
-import CurriculumPanel from './registrar/CurriculumPanel';
-import SectionPanel from './registrar/SectionPanel';
-import DepartmentSection from './registrar/DepartmentSection';
-import YearLevelPanel from './registrar/YearLevelPanel';
-import YearPanel from './registrar/YearPanel';
-import YearUpdateForm from './registrar/YearUpdateForm';
-import SemesterPanel from './registrar/SemesterPanel';
-import SchoolYearPanel from './registrar/SchoolYearPanel';
-import SchoolYearActivatorPanel from './registrar/SchoolYearActivatorPanel';
-import RequirementsForm from './registrar/RequirementsForm';
-import StudentNumbering from './registrar/StudentNumbering';
-import StudentNumberingPerCollege from './registrar/StudentNumberingPerCollege';
-import CourseTagging from './registrar/CourseTagging';
-import ChangeGradingPeriod from './registrar/ChangeYearGradPer';
-import ScheduleChecker from './registrar/ScheduleChecker';
-import RoomRegistration from './registrar/RoomRegistration';
-import RegistrarExamPermit from './registrar/RegistrarExamPermit';
-import ReportOfGrade from './registrar/ReportOfGrade';
-import TranscriptOfRecords from './registrar/TranscriptOfRecords';
-
-import EvaluationCRUD from './registrar/EvaluationCrud';
-
-import DepartmentCurriculumPanel from './registrar/DepartmentCurriculumPanel';
-import MedicalApplicantList from './registrar/MedicalApplicantList';
-import MedicalRequirementsForm from './registrar/MedicalRequirementsForm';
-import DentalAssessment from './registrar/DentalAssessment';
-import PhysicalNeuroExam from './registrar/PhysicalNeuroExam';
-import MedicalDashboard1 from './registrar/MedicalDashboard1';
-import MedicalDashboard2 from './registrar/MedicalDashboard2';
-import MedicalDashboard3 from './registrar/MedicalDashboard3';
-import MedicalDashboard4 from './registrar/MedicalDashboard4';
-import MedicalDashboard5 from './registrar/MedicalDashboard5';
-import MedicalRequirements from './registrar/MedicalRequirements';
-import MedicalCertificate from './registrar/MedicalCertificate';
-import HealthRecord from './registrar/HealthRecord';
-import ReadmissionDashboard1 from './registrar/ReadmissionDashboard1';
-import ReadmissionDashboard2 from './registrar/ReadmissionDashboard2';
-import ReadmissionDashboard3 from './registrar/ReadmissionDashboard3';
-import ReadmissionDashboard4 from './registrar/ReadmissionDashboard4';
-import ReadmissionDashboard5 from './registrar/ReadmissionDashboard5';
-import AnnouncementForAdmission from './registrar/AnnouncementForAdmission';
-import StudentList from './registrar/StudentList';
-import SubmittedDocuments from './registrar/SubmittedDocuments';
 
 
-import ProgramSlotLimit from './registrar/ProgramSlotLimit';
 
-import GradingEvaluationForRegistrar from './registrar/GradingEvaluationForRegistrar';
-import ProgramPayment from './registrar/ProgramPayment';
-import Prerequisite from "./registrar/Prerequisite";
-import ProgramUnit from "./registrar/ProgramUnit";
 
-import EvaluatorApplicantList from './registrar/EvaluatorApplicantList';
-import EvaluatorScheduleTile from './registrar/EvaluatorScheduleTile';
+
+
 
 // APPLICANT FOLDER
-import Dashboard1 from './applicant/Dashboard1';
-import Dashboard2 from './applicant/Dashboard2';
-import Dashboard3 from './applicant/Dashboard3';
-import Dashboard4 from './applicant/Dashboard4';
-import Dashboard5 from './applicant/Dashboard5';
-import RequirementUploader from './applicant/RequirementUploader';
-import PersonalDataForm from './applicant/PersonalDataForm';
-import ECATApplicationForm from './applicant/ECATApplicationForm';
-import AdmissionFormProcess from './applicant/AdmissionFormProcess';
-import AdmissionServices from './applicant/AdmissionServices';
-import OfficeOfTheRegistrar from './applicant/OfficeOfTheRegistrar';
-import ExamPermit from "./applicant/ExamPermit";
-import ApplicantResetPassword from './applicant/ApplicantResetPassword';
 
 // STUDENT FOLDER
-import StudentSchedule from './student/StudentSchedule';
-import StudentGradingPage from './student/StudentGrade';
-import StudentFacultyEvaluation from './student/StudentFacultyEval';
-import StudentDashboard1 from './student/StudentDashboard1';
-import StudentDashboard2 from './student/StudentDashboard2';
-import StudentDashboard3 from './student/StudentDashboard3';
-import StudentDashboard4 from './student/StudentDashboard4';
-import StudentDashboard5 from './student/StudentDashboard5';
-import StudentResetPassword from './student/StudentResetPassword';
-import CertificateOfRegistration from './student/CertificateOfRegistration';
-import StudentECATApplicationForm from './student/StudentECATApplicationForm';
-import StudentOfficeOfTheRegistrar from './student/StudentOfficeOfTheRegistrar';
-import StudentPersonalDataForm from './student/StudentPersonalDataForm';
-import StudentAdmissionServices from './student/StudentAdmissionServices';
-import StudentAdmissionFormProcess from './student/StudentAdmissionFormProcess';
 
 
 // SUPERADMIN FOLDER
-import EmailTemplateManager from './superadmin/EmailTemplateManager';
-import Announcement from './superadmin/Announcement';
-import MigrationDataPanel from './superadmin/MigrationDataPanel';
-import SuperAdminApplicantList from './superadmin/SuperAdminApplicantList';
-import SuperAdminApplicantDashboard1 from './superadmin/SuperAdminApplicantDashboard1';
-import SuperAdminApplicantDashboard2 from './superadmin/SuperAdminApplicantDashboard2';
-import SuperAdminApplicantDashboard3 from './superadmin/SuperAdminApplicantDashboard3';
-import SuperAdminApplicantDashboard4 from './superadmin/SuperAdminApplicantDashboard4';
-import SuperAdminApplicantDashboard5 from './superadmin/SuperAdminApplicantDashboard5';
-import SuperAdminRequirementsUploader from './superadmin/SuperAdminRequirementsUploader';
-import SignatureUpload from './superadmin/SignatureUpload';
 
-import SuperAdminStudentDashboard1 from './superadmin/SuperAdminStudentDashboard1';
-import SuperAdminStudentDashboard2 from './superadmin/SuperAdminStudentDashboard2';
-import SuperAdminStudentDashboard3 from './superadmin/SuperAdminStudentDashboard3';
-import SuperAdminStudentDashboard4 from './superadmin/SuperAdminStudentDashboard4';
-import SuperAdminStudentDashboard5 from './superadmin/SuperAdminStudentDashboard5';
-import SuperAdminApplicantResetPassword from './superadmin/SuperAdminApplicantResetPassword';
-import SuperAdminStudentResetPassword from './superadmin/SuperAdminStudentResetPassword';
-import SuperAdminFacultyResetPassword from './superadmin/SuperAdminFacultyResetPassword';
-import SuperAdminRegistrarPassword from './superadmin/SuperAdminRegistrarResetPassword';
-import SuperAdminProfessorEducation from './superadmin/SuperAdminProfessorEducation';
-import Notifications from './superadmin/Notifications';
-import RegistrarResetPassword from './superadmin/RegistrarResetPassword';
-import RegisterProf from './superadmin/RegisterProf';
-import RegisterRegistrar from './superadmin/RegisterRegistrar';
-import RegisterStudent from './superadmin/RegisterStudent';
-import PageCRUD from './superadmin/PageCRUD';
-import UserPageAccess from './superadmin/UserPageAccess';
-import Settings from './superadmin/Settings';
-import SuperAdminRoomRegistration from './superadmin/SuperAdminRoomRegistration';
 import API_BASE_URL from "./apiConfig";
-import CollegeScheduleChecker from "./registrar/CollegeScheduleChecker";
-import StudentGradeFile from "./superadmin/StudentGradeFile";
-import PaymentExportingModule from "./superadmin/PaymentExportingModule";
-import CORExportingModule from "./superadmin/CORExportingModule";
-import VerifyDocumentsSchedule from "./registrar/VerifyDocumentsSchedule";
-import VerifyApplicantDocumentSchedule from "./registrar/VerifySchedule";
-import StudentScholarshipList from "./superadmin/StudentScholarshipList";
-import TOSFCrud from './superadmin/TOSFCrud';
-import Receipt from './superadmin/Receipt';
-import ReceiptCounterAssignment from "./superadmin/ReceiptCounterAssignment";
-import MatriculationPaymentModule from "./superadmin/MatriculationPaymentModule";
-import SectionSlotMonitoring from "./superadmin/SlotMonitoring";
-import SearchCorForCollege from "./registrar/SearchCorForCollege";
-import CertificateOfRegistrationForCollege from "./registrar/CertificateOfRegistrationForCollege";
-import CourseTaggingForCollege from "./registrar/CourseTaggingForCollege";
-import LoadingOverlay from "./components/LoadingOverlay";
 
 // ✅ Create a Context so all components can access settings
 export const SettingsContext = createContext(null);
+
+const Unauthorized = lazy(() => import('./components/Unauthorized'));
+const Register = lazy(() => import('./components/Register'));
+const Login = lazy(() => import('./components/Login'));
+const LoginEnrollment = lazy(() => import('./components/LoginEnrollment'));
+const ApplicantForgotPassword = lazy(() => import('./components/ApplicantForgotPassword'));
+const RegistrarForgotPassword = lazy(() => import('./components/RegistrarForgotPassword'));
+const SideBar = lazy(() => import('./components/Sidebar'));
+const ApplicantProfile = lazy(() => import('./components/ApplicantProfile'));
+const ApplicantProfilePermit = lazy(() => import('./components/ApplicantProfile'));
+const AnnouncementSlider = lazy(() => import('./components/AnnouncementSlider'));
+const CourseManagement = lazy(() => import('./pages/CourseManagement'));
+const DepartmentManagement = lazy(() => import('./pages/DepartmentDashboard'));
+const AdmissionDashboardPanel = lazy(() => import('./pages/AdmissionDashboard'));
+const SystemDashboardPanel = lazy(() => import('./pages/SystemDashboard'));
+const FacultyDashboard = lazy(() => import('./pages/FacultyDashboard'));
+const RegistrarDashboard = lazy(() => import('./pages/RegistrarDashboard'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const ApplicantDashboard = lazy(() => import('./pages/ApplicantDashboard'));
+const AccountDashboard = lazy(() => import('./pages/AccountDashboard'));
+const ScheduleFilterer = lazy(() => import('./pages/SchedulePlottingFilter'));
+const HistoryLogs = lazy(() => import('./pages/HistoryLogs'));
+const EnrollmentOfficerDashboard = lazy(() => import('./pages/EnrollmentOfficerDashboard'));
+const AdmissionOfficerDashboard = lazy(() => import('./pages/AdmissionOfficerDashboard'));
+const StudentQrInfo = lazy(() => import('./pages/StudentQrInfo'));
+const GradingSheet = lazy(() => import('./faculty/GradingSheet'));
+const FacultyWorkload = lazy(() => import('./faculty/FacultyWorkload'));
+const FacultyMasterList = lazy(() => import('./faculty/FacultyMasterlist'));
+const ProgramEvaluation = lazy(() => import('./registrar/ProgramEvaluation'));
+const FacultyResetPassword = lazy(() => import('./faculty/FacultyResetPassword'));
+const FacultyEvaluation = lazy(() => import('./faculty/FacultyEvaluation'));
+const SearchCertificateOfRegistration = lazy(() => import('./registrar/SearchCertificateOfRegistration'));
+const AdminECATApplicationForm = lazy(() => import('./registrar/AdminECATApplicationForm'));
+const AdminPersonalDataForm = lazy(() => import('./registrar/AdminPersonalDataForm'));
+const AdminOfficeOfTheRegistrar = lazy(() => import('./registrar/AdminOfficeOfTheRegistrar'));
+const AdminAdmissionFormProcess = lazy(() => import('./registrar/AdminAdmissionFormProcess'));
+const AdminDashboard1 = lazy(() => import('./registrar/AdminDashboard1'));
+const AdminDashboard2 = lazy(() => import('./registrar/AdminDashboard2'));
+const AdminDashboard3 = lazy(() => import('./registrar/AdminDashboard3'));
+const AdminDashboard4 = lazy(() => import('./registrar/AdminDashboard4'));
+const AdminDashboard5 = lazy(() => import('./registrar/AdminDashboard5'));
+const RegistrarDashboard1 = lazy(() => import('./registrar/RegistrarDashboard1'));
+const RegistrarDashboard2 = lazy(() => import('./registrar/RegistrarDashboard2'));
+const RegistrarDashboard3 = lazy(() => import('./registrar/RegistrarDashboard3'));
+const RegistrarDashboard4 = lazy(() => import('./registrar/RegistrarDashboard4'));
+const RegistrarDashboard5 = lazy(() => import('./registrar/RegistrarDashboard5'));
+const ApplicantList = lazy(() => import('./registrar/ApplicantList'));
+const ApplicantListAdmin = lazy(() => import('./registrar/ApplicantListAdmin'));
+const StudentRequirements = lazy(() => import('./registrar/StudentRequirements'));
+const RegistrarRequirements = lazy(() => import('./registrar/RegistrarRequirements'));
+const RegistrarExaminationProfile = lazy(() => import('./registrar/RegistrarExaminationProfile'));
+const AssignScheduleToApplicants = lazy(() => import('./registrar/AssignScheduleToApplicants'));
+const AssignEntranceExam = lazy(() => import('./registrar/AssignEntranceExam'));
+const AdmissionScheduleTile = lazy(() => import('./registrar/AdmissionScheduleTile'));
+const EnrollmentScheduleTile = lazy(() => import('./registrar/EnrollmentScheduleTile'));
+const ProctorApplicantList = lazy(() => import('./registrar/ProctorApplicantList'));
+const ApplicantScoring = lazy(() => import('./registrar/ApplicantScoring'));
+const QualifyingInterviewExamScore = lazy(() => import('./registrar/QualifyingInterviewExamScore'));
+const QualifyingInterviewerApplicantList = lazy(() => import('./registrar/QualifyingInterviewerApplicantList'));
+const AssignQualifyingInterviewExam = lazy(() => import('./registrar/AssignQualifyingInterviewExam'));
+const AssignScheduleToApplicantsQualifyingInterviewer = lazy(() => import('./registrar/AssignScheduleToApplicantsQualifyingInterviewer'));
+const ClassRoster = lazy(() => import('./registrar/ClassRoster'));
+const DepartmentRegistration = lazy(() => import('./registrar/DprtmntRegistration'));
+const DepartmentRoom = lazy(() => import('./registrar/DprtmntRoom'));
+const ProgramTagging = lazy(() => import('./registrar/ProgramTagging'));
+const CoursePanel = lazy(() => import('./registrar/CoursePanel'));
+const ProgramPanel = lazy(() => import('./registrar/ProgramPanel'));
+const CurriculumPanel = lazy(() => import('./registrar/CurriculumPanel'));
+const SectionPanel = lazy(() => import('./registrar/SectionPanel'));
+const DepartmentSection = lazy(() => import('./registrar/DepartmentSection'));
+const YearLevelPanel = lazy(() => import('./registrar/YearLevelPanel'));
+const YearPanel = lazy(() => import('./registrar/YearPanel'));
+const YearUpdateForm = lazy(() => import('./registrar/YearUpdateForm'));
+const SemesterPanel = lazy(() => import('./registrar/SemesterPanel'));
+const SchoolYearPanel = lazy(() => import('./registrar/SchoolYearPanel'));
+const SchoolYearActivatorPanel = lazy(() => import('./registrar/SchoolYearActivatorPanel'));
+const RequirementsForm = lazy(() => import('./registrar/RequirementsForm'));
+const StudentNumbering = lazy(() => import('./registrar/StudentNumbering'));
+const StudentNumberingPerCollege = lazy(() => import('./registrar/StudentNumberingPerCollege'));
+const CourseTagging = lazy(() => import('./registrar/CourseTagging'));
+const ChangeGradingPeriod = lazy(() => import('./registrar/ChangeYearGradPer'));
+const ScheduleChecker = lazy(() => import('./registrar/ScheduleChecker'));
+const RoomRegistration = lazy(() => import('./registrar/RoomRegistration'));
+const RegistrarExamPermit = lazy(() => import('./registrar/RegistrarExamPermit'));
+const ReportOfGrade = lazy(() => import('./registrar/ReportOfGrade'));
+const TranscriptOfRecords = lazy(() => import('./registrar/TranscriptOfRecords'));
+const EvaluationCRUD = lazy(() => import('./registrar/EvaluationCrud'));
+const DepartmentCurriculumPanel = lazy(() => import('./registrar/DepartmentCurriculumPanel'));
+const MedicalApplicantList = lazy(() => import('./registrar/MedicalApplicantList'));
+const MedicalRequirementsForm = lazy(() => import('./registrar/MedicalRequirementsForm'));
+const DentalAssessment = lazy(() => import('./registrar/DentalAssessment'));
+const PhysicalNeuroExam = lazy(() => import('./registrar/PhysicalNeuroExam'));
+const MedicalDashboard1 = lazy(() => import('./registrar/MedicalDashboard1'));
+const MedicalDashboard2 = lazy(() => import('./registrar/MedicalDashboard2'));
+const MedicalDashboard3 = lazy(() => import('./registrar/MedicalDashboard3'));
+const MedicalDashboard4 = lazy(() => import('./registrar/MedicalDashboard4'));
+const MedicalDashboard5 = lazy(() => import('./registrar/MedicalDashboard5'));
+const MedicalRequirements = lazy(() => import('./registrar/MedicalRequirements'));
+const MedicalCertificate = lazy(() => import('./registrar/MedicalCertificate'));
+const HealthRecord = lazy(() => import('./registrar/HealthRecord'));
+const ReadmissionDashboard1 = lazy(() => import('./registrar/ReadmissionDashboard1'));
+const ReadmissionDashboard2 = lazy(() => import('./registrar/ReadmissionDashboard2'));
+const ReadmissionDashboard3 = lazy(() => import('./registrar/ReadmissionDashboard3'));
+const ReadmissionDashboard4 = lazy(() => import('./registrar/ReadmissionDashboard4'));
+const ReadmissionDashboard5 = lazy(() => import('./registrar/ReadmissionDashboard5'));
+const AnnouncementForAdmission = lazy(() => import('./registrar/AnnouncementForAdmission'));
+const StudentList = lazy(() => import('./registrar/StudentList'));
+const SubmittedDocuments = lazy(() => import('./registrar/SubmittedDocuments'));
+const ProgramSlotLimit = lazy(() => import('./registrar/ProgramSlotLimit'));
+const GradingEvaluationForRegistrar = lazy(() => import('./registrar/GradingEvaluationForRegistrar'));
+const ProgramPayment = lazy(() => import('./registrar/ProgramPayment'));
+const Prerequisite = lazy(() => import('./registrar/Prerequisite'));
+const ProgramUnit = lazy(() => import('./registrar/ProgramUnit'));
+const EvaluatorApplicantList = lazy(() => import('./registrar/EvaluatorApplicantList'));
+const EvaluatorScheduleTile = lazy(() => import('./registrar/EvaluatorScheduleTile'));
+const Dashboard1 = lazy(() => import('./applicant/Dashboard1'));
+const Dashboard2 = lazy(() => import('./applicant/Dashboard2'));
+const Dashboard3 = lazy(() => import('./applicant/Dashboard3'));
+const Dashboard4 = lazy(() => import('./applicant/Dashboard4'));
+const Dashboard5 = lazy(() => import('./applicant/Dashboard5'));
+const RequirementUploader = lazy(() => import('./applicant/RequirementUploader'));
+const PersonalDataForm = lazy(() => import('./applicant/PersonalDataForm'));
+const ECATApplicationForm = lazy(() => import('./applicant/ECATApplicationForm'));
+const AdmissionFormProcess = lazy(() => import('./applicant/AdmissionFormProcess'));
+const AdmissionServices = lazy(() => import('./applicant/AdmissionServices'));
+const OfficeOfTheRegistrar = lazy(() => import('./applicant/OfficeOfTheRegistrar'));
+const ExamPermit = lazy(() => import('./applicant/ExamPermit'));
+const ApplicantResetPassword = lazy(() => import('./applicant/ApplicantResetPassword'));
+const StudentSchedule = lazy(() => import('./student/StudentSchedule'));
+const StudentGradingPage = lazy(() => import('./student/StudentGrade'));
+const StudentFacultyEvaluation = lazy(() => import('./student/StudentFacultyEval'));
+const StudentDashboard1 = lazy(() => import('./student/StudentDashboard1'));
+const StudentDashboard2 = lazy(() => import('./student/StudentDashboard2'));
+const StudentDashboard3 = lazy(() => import('./student/StudentDashboard3'));
+const StudentDashboard4 = lazy(() => import('./student/StudentDashboard4'));
+const StudentDashboard5 = lazy(() => import('./student/StudentDashboard5'));
+const StudentResetPassword = lazy(() => import('./student/StudentResetPassword'));
+const CertificateOfRegistration = lazy(() => import('./student/CertificateOfRegistration'));
+const StudentECATApplicationForm = lazy(() => import('./student/StudentECATApplicationForm'));
+const StudentOfficeOfTheRegistrar = lazy(() => import('./student/StudentOfficeOfTheRegistrar'));
+const StudentPersonalDataForm = lazy(() => import('./student/StudentPersonalDataForm'));
+const StudentAdmissionServices = lazy(() => import('./student/StudentAdmissionServices'));
+const StudentAdmissionFormProcess = lazy(() => import('./student/StudentAdmissionFormProcess'));
+const EmailTemplateManager = lazy(() => import('./superadmin/EmailTemplateManager'));
+const Announcement = lazy(() => import('./superadmin/Announcement'));
+const MigrationDataPanel = lazy(() => import('./superadmin/MigrationDataPanel'));
+const SuperAdminApplicantList = lazy(() => import('./superadmin/SuperAdminApplicantList'));
+const SuperAdminApplicantDashboard1 = lazy(() => import('./superadmin/SuperAdminApplicantDashboard1'));
+const SuperAdminApplicantDashboard2 = lazy(() => import('./superadmin/SuperAdminApplicantDashboard2'));
+const SuperAdminApplicantDashboard3 = lazy(() => import('./superadmin/SuperAdminApplicantDashboard3'));
+const SuperAdminApplicantDashboard4 = lazy(() => import('./superadmin/SuperAdminApplicantDashboard4'));
+const SuperAdminApplicantDashboard5 = lazy(() => import('./superadmin/SuperAdminApplicantDashboard5'));
+const SuperAdminRequirementsUploader = lazy(() => import('./superadmin/SuperAdminRequirementsUploader'));
+const SignatureUpload = lazy(() => import('./superadmin/SignatureUpload'));
+const SuperAdminStudentDashboard1 = lazy(() => import('./superadmin/SuperAdminStudentDashboard1'));
+const SuperAdminStudentDashboard2 = lazy(() => import('./superadmin/SuperAdminStudentDashboard2'));
+const SuperAdminStudentDashboard3 = lazy(() => import('./superadmin/SuperAdminStudentDashboard3'));
+const SuperAdminStudentDashboard4 = lazy(() => import('./superadmin/SuperAdminStudentDashboard4'));
+const SuperAdminStudentDashboard5 = lazy(() => import('./superadmin/SuperAdminStudentDashboard5'));
+const SuperAdminApplicantResetPassword = lazy(() => import('./superadmin/SuperAdminApplicantResetPassword'));
+const SuperAdminStudentResetPassword = lazy(() => import('./superadmin/SuperAdminStudentResetPassword'));
+const SuperAdminFacultyResetPassword = lazy(() => import('./superadmin/SuperAdminFacultyResetPassword'));
+const SuperAdminRegistrarPassword = lazy(() => import('./superadmin/SuperAdminRegistrarResetPassword'));
+const SuperAdminProfessorEducation = lazy(() => import('./superadmin/SuperAdminProfessorEducation'));
+const Notifications = lazy(() => import('./superadmin/Notifications'));
+const RegistrarResetPassword = lazy(() => import('./superadmin/RegistrarResetPassword'));
+const RegisterProf = lazy(() => import('./superadmin/RegisterProf'));
+const RegisterRegistrar = lazy(() => import('./superadmin/RegisterRegistrar'));
+const RegisterStudent = lazy(() => import('./superadmin/RegisterStudent'));
+const PageCRUD = lazy(() => import('./superadmin/PageCRUD'));
+const UserPageAccess = lazy(() => import('./superadmin/UserPageAccess'));
+const Settings = lazy(() => import('./superadmin/Settings'));
+const SuperAdminRoomRegistration = lazy(() => import('./superadmin/SuperAdminRoomRegistration'));
+const CollegeScheduleChecker = lazy(() => import('./registrar/CollegeScheduleChecker'));
+const StudentGradeFile = lazy(() => import('./superadmin/StudentGradeFile'));
+const PaymentExportingModule = lazy(() => import('./superadmin/PaymentExportingModule'));
+const CORExportingModule = lazy(() => import('./superadmin/CORExportingModule'));
+const VerifyDocumentsSchedule = lazy(() => import('./registrar/VerifyDocumentsSchedule'));
+const VerifyApplicantDocumentSchedule = lazy(() => import('./registrar/VerifySchedule'));
+const StudentScholarshipList = lazy(() => import('./superadmin/StudentScholarshipList'));
+const TOSFCrud = lazy(() => import('./superadmin/TOSFCrud'));
+const Receipt = lazy(() => import('./superadmin/Receipt'));
+const ReceiptCounterAssignment = lazy(() => import('./superadmin/ReceiptCounterAssignment'));
+const MatriculationPaymentModule = lazy(() => import('./superadmin/MatriculationPaymentModule'));
+const SectionSlotMonitoring = lazy(() => import('./superadmin/SlotMonitoring'));
+const SearchCorForCollege = lazy(() => import('./registrar/SearchCorForCollege'));
+const CertificateOfRegistrationForCollege = lazy(() => import('./registrar/CertificateOfRegistrationForCollege'));
+const CourseTaggingForCollege = lazy(() => import('./registrar/CourseTaggingForCollege'));
+const LoadingOverlay = lazy(() => import('./components/LoadingOverlay'));
 
 function App() {
   const getCachedSettings = () => {
@@ -391,6 +392,21 @@ function App() {
 
       {/* ✅ Wrap entire app with SettingsContext.Provider */}
       <SettingsContext.Provider value={settings}>
+        <Suspense
+          fallback={
+            <Box
+              sx={{
+                height: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "Poppins, sans-serif",
+              }}
+            >
+              <Typography variant="h6">Loading page...</Typography>
+            </Box>
+          }
+        >
         <Router>
           {/* ✅ Layout container */}
           <div className="flex flex-col min-h-screen">
@@ -717,9 +733,11 @@ function App() {
 
           </div>
         </Router>
+        </Suspense>
       </SettingsContext.Provider>
     </ThemeProvider>
   );
 }
 
 export default App;
+
