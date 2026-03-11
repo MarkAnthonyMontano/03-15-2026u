@@ -349,7 +349,7 @@ const checkStepAccess = (requiredStep) => {
   };
 };
 
-// ---------------- TRANSPORTER ----------------
+// ---------------- TRANSPORTER ---------------
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -366,6 +366,8 @@ transporter.verify((error, success) => {
     console.log("✅ Email transporter is ready");
   }
 });
+
+
 
 const getDbHost = () => {
   if (process.env.NODE_ENV === "production") {
@@ -5839,7 +5841,7 @@ io.on("connection", (socket) => {
     async ({
       schedule_id,
       applicant_numbers,
-      subject,
+      subject: finalSubject,
       senderName,
       message,
       user_person_id,
@@ -5848,26 +5850,36 @@ io.on("connection", (socket) => {
         // 🔹 Fetch applicants linked to the interview schedule
         const [rows] = await db.query(
           `SELECT
-  ia.schedule_id,
-  s.day_description,
-  s.building_description,
-  s.room_description,
-  s.start_time,
-  s.end_time,
-  an.applicant_number,
-  p.person_id,
-  p.first_name,
-  p.middle_name,
-  p.last_name,
-  p.emailAddress
-FROM interview_applicants ia
-JOIN interview_exam_schedule s ON ia.schedule_id = s.schedule_id
-JOIN applicant_numbering_table an ON ia.applicant_id = an.applicant_number
-JOIN person_table p ON an.person_id = p.person_id
-WHERE ia.schedule_id = ?
-AND an.applicant_number IN (?)`,
-          [schedule_id, applicant_numbers],
+            ia.schedule_id,
+            s.day_description,
+            s.building_description,
+            s.room_description,
+            s.start_time,
+            s.end_time,
+            an.applicant_number,
+            p.person_id,
+            p.first_name,
+            p.middle_name,
+            p.last_name,
+            p.emailAddress,
+            dt.dprtmnt_name
+          FROM interview_applicants ia
+          JOIN interview_exam_schedule s 
+            ON ia.schedule_id = s.schedule_id
+          JOIN applicant_numbering_table an 
+            ON ia.applicant_id = an.applicant_number
+          JOIN person_table p 
+            ON an.person_id = p.person_id
+          JOIN enrollment.dprtmnt_curriculum_table dct 
+            ON p.program = dct.curriculum_id
+          JOIN enrollment.dprtmnt_table dt 
+            ON dct.dprtmnt_id = dt.dprtmnt_id
+          WHERE ia.schedule_id = ?
+          AND an.applicant_number IN (?)`,
+          [schedule_id, applicant_numbers]
         );
+
+
 
         if (rows.length === 0) {
           return socket.emit("send_schedule_emails_result", {
@@ -5875,6 +5887,16 @@ AND an.applicant_number IN (?)`,
             error: "No applicants found for this interview schedule.",
           });
         }
+
+        // 🔹 Get SHORT TERM (EARIST)
+        const [[company]] = await db.query(
+          "SELECT short_term FROM company_settings WHERE id = 1"
+        );
+
+        const shortTerm = company?.short_term || "EARIST";
+
+        const finalSubjectComputed = rows[0]?.dprtmnt_name || "Interview Schedule";
+
 
         // ✅ Use db3 (enrollment) → user_accounts instead of prof
         const [actorRows] = await db3.query(
@@ -5915,6 +5937,7 @@ AND an.applicant_number IN (?)`,
             minute: "2-digit",
             hour12: true,
           });
+
           const formattedEnd = new Date(
             `1970-01-01T${row.end_time}`,
           ).toLocaleTimeString("en-US", {
@@ -5927,21 +5950,37 @@ AND an.applicant_number IN (?)`,
             .replace("{first_name}", row.first_name || "")
             .replace("{middle_name}", row.middle_name || "")
             .replace("{last_name}", row.last_name || "")
-
             .replace("{applicant_number}", row.applicant_number)
             .replace("{day}", row.day_description)
             .replace("{room}", row.room_description)
             .replace("{start_time}", formattedStart)
             .replace("{end_time}", formattedEnd);
 
+          console.log("Email Sender: ", senderName)
           const mailOptions = {
-            from: `"${senderName}" <${process.env.EMAIL_USER}>`,
+            from: `${shortTerm} - ${rows.dprtmnt_name} <${senderName}>`,
             to: row.emailAddress,
-            subject,
+            subject: finalSubjectComputed,
             text: personalizedMsg,
           };
 
           try {
+            const transporter = nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+              },
+            });
+
+            transporter.verify((error, success) => {
+              if (error) {
+                console.error("❌ Email transporter error:", error);
+              } else {
+                console.log("✅ Email transporter is ready");
+              }
+            });
+
             await transporter.sendMail(mailOptions);
 
             // Mark applicant email sent
