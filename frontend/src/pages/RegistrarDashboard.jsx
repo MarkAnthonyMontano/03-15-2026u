@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { SettingsContext } from "../App";
-
 import axios from "axios";
 import {
   Box,
@@ -14,11 +13,8 @@ import {
   Select,
   InputLabel,
   Avatar,
-  Stack,
-  Divider,
   Paper,
 } from "@mui/material";
-import GroupIcon from "@mui/icons-material/Groups";
 import SchoolIcon from "@mui/icons-material/School";
 import PersonIcon from "@mui/icons-material/Person";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
@@ -29,8 +25,6 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  LineChart,
-  Line,
   Cell,
   Legend,
   PieChart,
@@ -39,7 +33,6 @@ import {
 import { Tooltip } from "recharts";
 import MuiTooltip from "@mui/material/Tooltip";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import ExaminationProfile from "../registrar/ExaminationProfile";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import API_BASE_URL from "../apiConfig";
 import EaristLogo from "../assets/EaristLogo.png";
@@ -51,7 +44,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const [subtitleColor, setSubtitleColor] = useState("#555555");
   const [borderColor, setBorderColor] = useState("#000000");
   const [mainButtonColor, setMainButtonColor] = useState("#1976d2");
-  const [stepperColor, setStepperColor] = useState("#000000"); // ✅ NEW
+  const [stepperColor, setStepperColor] = useState("#000000");
 
   const [fetchedLogo, setFetchedLogo] = useState(null);
   const [companyName, setCompanyName] = useState("");
@@ -60,23 +53,16 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
 
   useEffect(() => {
     if (!settings) return;
-
-    // 🎨 Colors
     if (settings.title_color) setTitleColor(settings.title_color);
     if (settings.subtitle_color) setSubtitleColor(settings.subtitle_color);
     if (settings.border_color) setBorderColor(settings.border_color);
-    if (settings.main_button_color)
-      setMainButtonColor(settings.main_button_color);
-    if (settings.stepper_color) setStepperColor(settings.stepper_color); // ✅ NEW
-
-    // 🏫 Logo
+    if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
+    if (settings.stepper_color) setStepperColor(settings.stepper_color);
     if (settings.logo_url) {
       setFetchedLogo(`${API_BASE_URL}${settings.logo_url}`);
     } else {
       setFetchedLogo(EaristLogo);
     }
-
-    // 🏷️ School Information
     if (settings.company_name) setCompanyName(settings.company_name);
     if (settings.short_term) setShortTerm(settings.short_term);
     if (settings.campus_address) setCampusAddress(settings.campus_address);
@@ -93,17 +79,13 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const [studentCount, setStudentCount] = useState(0);
   const [yearLevelCounts, setYearLevelCounts] = useState([]);
   const [data, setData] = useState(null);
-
   const [employeeID, setEmployeeID] = useState("");
   const [hasAccess, setHasAccess] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // ✅ NEW access map
   const [userAccessList, setUserAccessList] = useState({});
 
-  const pageId = 101; // SYSTEM MANAGEMENT
+  const pageId = 101;
 
-  // Load user & access
   useEffect(() => {
     const email = localStorage.getItem("email");
     const role = localStorage.getItem("role");
@@ -114,7 +96,6 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
       setUserRole(role);
       setUserID(id);
       setEmployeeID(empID);
-
       if (role === "registrar") {
         checkAccess(empID);
         fetchUserAccessList(empID);
@@ -129,9 +110,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const checkAccess = async (employeeID) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/api/page_access/${employeeID}/${pageId}`,
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/page_access/${employeeID}/${pageId}`);
       setHasAccess(response.data?.page_privilege === 1);
     } catch (error) {
       setHasAccess(false);
@@ -140,25 +119,24 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     }
   };
 
-  // ✅ SAME access list logic as Admission
   const fetchUserAccessList = async (employeeID) => {
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/api/page_access/${employeeID}`,
-      );
-
+      const { data } = await axios.get(`${API_BASE_URL}/api/page_access/${employeeID}`);
       const accessMap = data.reduce((acc, item) => {
         acc[item.page_id] = item.page_privilege === 1;
         return acc;
       }, {});
-
       setUserAccessList(accessMap);
     } catch (err) {
       console.error("Access list failed:", err);
     }
   };
 
-  const [dateTime, setDateTime] = useState(new Date());
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const formattedDate = new Date().toLocaleDateString("en-US", {
     weekday: "short",
@@ -166,16 +144,6 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     month: "long",
     year: "numeric",
   });
-
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const formattedTime = time.toLocaleTimeString("en-US", {
     timeZone: "Asia/Manila",
@@ -189,12 +157,10 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     const storedUser = localStorage.getItem("email");
     const storedRole = localStorage.getItem("role");
     const storedID = localStorage.getItem("person_id");
-
     if (storedUser && storedRole && storedID) {
       setUser(storedUser);
       setUserRole(storedRole);
       setUserID(storedID);
-
       if (storedRole !== "registrar") {
         window.location.href = "/applicant_dashboard";
       }
@@ -204,201 +170,84 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/enrolled-count`)
-      .then((res) => setEnrolledCount(res.data.total))
-      .catch((err) => console.error("Failed to fetch enrolled count", err));
-
-    axios
-      .get(`${API_BASE_URL}/api/professors`)
-      .then((res) =>
-        setProfessorCount(Array.isArray(res.data) ? res.data.length : 0),
-      )
-      .catch((err) => console.error("Failed to fetch professor count", err));
-
-    axios
-      .get(`${API_BASE_URL}/api/accepted-students-count`)
-      .then((res) => setAcceptedCount(res.data.total))
-      .catch((err) => console.error("Failed to fetch accepted count", err));
-
-    axios
-      .get(`${API_BASE_URL}/api/departments`)
-      .then((res) => setDepartments(res.data))
-      .catch((err) => console.error("Failed to fetch departments", err));
+    axios.get(`${API_BASE_URL}/api/enrolled-count`).then((res) => setEnrolledCount(res.data.total)).catch(console.error);
+    axios.get(`${API_BASE_URL}/api/professors`).then((res) => setProfessorCount(Array.isArray(res.data) ? res.data.length : 0)).catch(console.error);
+    axios.get(`${API_BASE_URL}/api/accepted-students-count`).then((res) => setAcceptedCount(res.data.total)).catch(console.error);
+    axios.get(`${API_BASE_URL}/api/departments`).then((res) => setDepartments(res.data)).catch(console.error);
   }, []);
 
   useEffect(() => {
     if (selectedDepartment) {
-      axios
-        .get(
-          `${API_BASE_URL}/statistics/student_count/department/${selectedDepartment}`,
-        )
-        .then((res) => setStudentCount(res.data.count))
-        .catch((err) => console.error("Failed to fetch student count", err));
-
-      axios
-        .get(
-          `${API_BASE_URL}/statistics/student_count/department/${selectedDepartment}/by_year_level`,
-        )
-        .then((res) => setYearLevelCounts(res.data))
-        .catch((err) =>
-          console.error("Failed to fetch year level counts", err),
-        );
+      axios.get(`${API_BASE_URL}/statistics/student_count/department/${selectedDepartment}`).then((res) => setStudentCount(res.data.count)).catch(console.error);
+      axios.get(`${API_BASE_URL}/statistics/student_count/department/${selectedDepartment}/by_year_level`).then((res) => setYearLevelCounts(res.data)).catch(console.error);
     }
   }, [selectedDepartment]);
 
   const [registrarCount, setRegistrarCount] = useState(0);
-
   useEffect(() => {
-    const fetchRegistrarCount = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/registrar_count`);
-        setRegistrarCount(res.data.count || 0);
-      } catch (error) {
-        console.error("Error fetching registrar count:", error);
-      }
-    };
-    fetchRegistrarCount();
+    axios.get(`${API_BASE_URL}/api/registrar_count`).then((res) => setRegistrarCount(res.data.count || 0)).catch(console.error);
   }, []);
 
-  const [applicant, setApplicant] = useState({
-    totalApplicants: 0,
-    male: 0,
-    female: 0,
-    statusCounts: [],
-  });
-
+  const [applicant, setApplicant] = useState({ totalApplicants: 0, male: 0, female: 0, statusCounts: [] });
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/applicant-stats`)
-      .then((res) => {
-        const data = res.data;
-
-        const male =
-          data.genderCounts.find((g) => g.gender === "Male")?.total || 0;
-        const female =
-          data.genderCounts.find((g) => g.gender === "Female")?.total || 0;
-
-        const statusCounts = data.statusCounts.map((s) => ({
-          termsOfAgreement: s.termsOfAgreement === 1 ? "Agreed" : "Not Agreed",
-          total: s.total,
-        }));
-
-        setApplicant({
-          totalApplicants: data.totalApplicants,
-          male,
-          female,
-          statusCounts,
-        });
-      })
-      .catch((err) => console.error("Applicant stats fetch error:", err));
+    axios.get(`${API_BASE_URL}/api/applicant-stats`).then((res) => {
+      const d = res.data;
+      const male = d.genderCounts.find((g) => g.gender === "Male")?.total || 0;
+      const female = d.genderCounts.find((g) => g.gender === "Female")?.total || 0;
+      setApplicant({ totalApplicants: d.totalApplicants, male, female, statusCounts: d.statusCounts });
+    }).catch(console.error);
   }, []);
 
   const stats = [
-    {
-      label: "Enrolled Students",
-      value: acceptedCount,
-      icon: <SchoolIcon fontSize="large" />,
-      color: "#84B082", // green
-    },
-    {
-      label: "Professors",
-      value: professorCount,
-      icon: <PersonIcon fontSize="large" />,
-      color: "#A3C4F3", // blue
-    },
-    {
-      label: "Total Registrar",
-      value: registrarCount,
-      icon: <AdminPanelSettingsIcon fontSize="large" />, // new icon
-      color: "#FFD8A9", // light orange
-    },
+    { label: "Enrolled Students", value: acceptedCount, icon: <SchoolIcon fontSize="large" />, color: "#84B082" },
+    { label: "Professors", value: professorCount, icon: <PersonIcon fontSize="large" />, color: "#A3C4F3" },
+    { label: "Total Registrar", value: registrarCount, icon: <AdminPanelSettingsIcon fontSize="large" />, color: "#FFD8A9" },
   ];
 
-  const [date, setDate] = useState(new Date());
-
+  // Calendar state
+  const [calDate, setCalDate] = useState(new Date());
+  const calYear = calDate.getFullYear();
+  const calMonth = calDate.getMonth();
   const days = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
 
-  const year = date.getFullYear();
-  const month = date.getMonth();
-
   const now = new Date();
-  const manilaDate = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Manila" }),
-  );
+  const manilaDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
   const today = manilaDate.getDate();
   const thisMonth = manilaDate.getMonth();
   const thisYear = manilaDate.getFullYear();
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const totalDays = new Date(year, month + 1, 0).getDate();
-
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const totalDays = new Date(calYear, calMonth + 1, 0).getDate();
   const weeks = [];
   let currentDay = 1 - firstDay;
-
   while (currentDay <= totalDays) {
     const week = [];
     for (let i = 0; i < 7; i++) {
-      if (currentDay > 0 && currentDay <= totalDays) {
-        week.push(currentDay);
-      } else {
-        week.push(null);
-      }
+      week.push(currentDay > 0 && currentDay <= totalDays ? currentDay : null);
       currentDay++;
     }
     weeks.push(week);
   }
 
-  const handlePrevMonth = () => setDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setDate(new Date(year, month + 1, 1));
   const [holidays, setHolidays] = useState({});
-
   useEffect(() => {
-    const fetchHolidays = async () => {
-      try {
-        const res = await axios.get(
-          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`,
-        );
+    axios.get(`https://date.nager.at/api/v3/PublicHolidays/${calYear}/PH`)
+      .then((res) => {
         const lookup = {};
-        res.data.forEach((h) => {
-          lookup[h.date] = h;
-        });
+        res.data.forEach((h) => { lookup[h.date] = h; });
         setHolidays(lookup);
-      } catch (err) {
-        console.error("❌ Failed to fetch PH holidays:", err);
-        setHolidays({});
-      }
-    };
-    fetchHolidays();
-  }, [year]);
+      }).catch(() => setHolidays({}));
+  }, [calYear]);
 
   const [monthlyApplicants, setMonthlyApplicants] = useState([]);
   const [months, setMonths] = useState("January");
-
-  // After fetching monthlyApplicants from API
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/applicants-per-month`)
-      .then((res) => {
-        const currentYear = new Date().getFullYear();
-
-        // Build an array for all 12 months of the current year
-        const months = Array.from({ length: 12 }, (_, i) => {
-          const month = String(i + 1).padStart(2, "0"); // 01 → 12
-          return `${currentYear}-${month}`;
-        });
-
-        // Merge API data with all months
-        const filledData = months.map((m) => {
-          const found = res.data.find((item) => item.month === m);
-          return found ? found : { month: m, total: 0 };
-        });
-
-        setMonthlyApplicants(filledData);
-      })
-      .catch((err) =>
-        console.error("Failed to fetch applicants per month", err),
-      );
+    axios.get(`${API_BASE_URL}/api/applicants-per-month`).then((res) => {
+      const currentYear = new Date().getFullYear();
+      const allMonths = Array.from({ length: 12 }, (_, i) => `${currentYear}-${String(i + 1).padStart(2, "0")}`);
+      const filledData = allMonths.map((m) => res.data.find((item) => item.month === m) || { month: m, total: 0 });
+      setMonthlyApplicants(filledData);
+    }).catch(console.error);
   }, []);
 
   const [personData, setPersonData] = useState(null);
@@ -409,100 +258,58 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   useEffect(() => {
     const person_id = localStorage.getItem("person_id");
     const role = localStorage.getItem("role");
-
     if (person_id && role) {
-      axios
-        .get(`${API_BASE_URL}/api/person_data/${person_id}/${role}`)
-        .then((res) => setPersonData(res.data))
-        .catch((err) => console.error("Failed to fetch person data:", err));
+      axios.get(`${API_BASE_URL}/api/person_data/${person_id}/${role}`).then((res) => setPersonData(res.data)).catch(console.error);
     }
   }, []);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
-      // ✅ Get the logged-in role (registrar, admin, etc.)
       const role = localStorage.getItem("role");
-
       const formData = new FormData();
       formData.append("profile_picture", file);
       formData.append("person_id", personData.person_id);
-
-      // ✅ Use your backend route
       await axios.post(`${API_BASE_URL}/admin/update_registrar`, formData);
-
-      // ✅ Refresh the data (using correct role)
-      const refreshed = await axios.get(
-        `${API_BASE_URL}/api/person_data/${personData.person_id}/${role}`,
-      );
+      const refreshed = await axios.get(`${API_BASE_URL}/api/person_data/${personData.person_id}/${role}`);
       setPersonData(refreshed.data);
-
       const baseUrl = `${API_BASE_URL}/uploads/Admin1by1/${refreshed.data.profile_image}`;
       setProfileImage(`${baseUrl}?t=${Date.now()}`);
-
-      console.log("✅ Profile updated successfully!");
     } catch (err) {
-      console.error("❌ Upload failed:", err);
+      console.error("Upload failed:", err);
     }
   };
 
   const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
-
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/get_school_year`)
-      .then((res) => {
-        const currentYear = new Date().getFullYear();
-        const filteredYears = res.data.filter(
-          (yearObj) => Number(yearObj.current_year) <= currentYear,
-        );
-
-        setYears(filteredYears);
-      })
-      .catch((err) => console.error(err));
+    axios.get(`${API_BASE_URL}/get_school_year`).then((res) => {
+      const currentYear = new Date().getFullYear();
+      setYears(res.data.filter((y) => Number(y.current_year) <= currentYear));
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/ecat-summary`)
-      .then((res) => {
-        console.log("count", res.data);
-        const d = res.data?.[0] || {};
-        setPieData([
-          { name: "Applied", value: Number(d.total_applied) || 0 },
-          { name: "Scheduled", value: Number(d.total_scheduled) || 0 },
-          { name: "Pending", value: Number(d.total_pending) || 0 },
-          { name: "Finished", value: Number(d.total_finished) || 0 },
-        ]);
-      })
-      .catch((err) => console.error(err));
+    axios.get(`${API_BASE_URL}/api/ecat-summary`).then((res) => {
+      const d = res.data?.[0] || {};
+      setPieData([
+        { name: "Applied", value: Number(d.total_applied) || 0 },
+        { name: "Scheduled", value: Number(d.total_scheduled) || 0 },
+        { name: "Pending", value: Number(d.total_pending) || 0 },
+        { name: "Finished", value: Number(d.total_finished) || 0 },
+      ]);
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/get_enrollment_statistic`, {
-        params: { year: selectedYear },
-      })
-      .then((res) => {
-        setData(res.data);
-      })
-      .catch((err) => console.error(err));
-  }, [selectedYear]); // Re-run whenever selectedYear changes
-
-  const enrollmentCOLORS = [
-    "#0088FE",
-    "#00C49F",
-    "#FFBB28",
-    "#FF8042",
-    "#AA336A",
-    "#3366AA",
-  ];
+    axios.get(`${API_BASE_URL}/get_enrollment_statistic`, { params: { year: selectedYear } })
+      .then((res) => setData(res.data))
+      .catch(console.error);
+  }, [selectedYear]);
 
   if (!data || Object.keys(data).length === 0) {
-    return <Typography>Loading...</Typography>;
+    return <Typography sx={{ p: 3 }}>Loading...</Typography>;
   }
 
   const programData = [
@@ -514,7 +321,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const studentTypeData = [
     { name: "Returnee", value: Number(data.Returnee) || 0 },
     { name: "Shiftee", value: Number(data.Shiftee) || 0 },
-    { name: "Foreign Student", value: Number(data.ForeignStudent) || 0 },
+    { name: "Foreign", value: Number(data.ForeignStudent) || 0 },
     { name: "Transferee", value: Number(data.Transferee) || 0 },
   ];
 
@@ -522,10 +329,20 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     ? `url(${API_BASE_URL}${settings.bg_image})`
     : "linear-gradient(to right, #e0e0e0, #bdbdbd)";
 
+  const headerColor = settings?.header_color || "#1976d2";
+
+  const cardSx = {
+    border: `2px solid ${borderColor}`,
+    borderRadius: 3,
+    boxShadow: 3,
+    transition: "transform 0.2s ease",
+    "&:hover": { transform: "scale(1.02)" },
+  };
+
   return (
     <Box
       sx={{
-        height: "calc(100vh - 100px)", // fixed viewport height
+        height: "calc(100vh - 100px)",
         width: "100%",
         backgroundImage,
         backgroundRepeat: "no-repeat",
@@ -539,556 +356,319 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
         sx={{
           position: "absolute",
           inset: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.1)",
+          backgroundColor: "rgba(0,0,0,0.1)",
           backdropFilter: "blur(0.5px)",
-          WebkitBackdropFilter: "blur(0.5px)",
           zIndex: 0,
           pointerEvents: "none",
         }}
       />
 
       {/* Scrollable content */}
-      <Box
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          height: "100%", // take full height of parent
-          overflowY: "auto", // ✅ THIS allows scrolling
-          padding: 2,
-        }}
-      >
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Card
+      <Box sx={{ position: "relative", zIndex: 1, height: "100%", overflowY: "auto", p: { xs: 1.5, sm: 2, md: 3 } }}>
+
+        {/* ── Welcome Card ── */}
+        <Card sx={{ ...cardSx, backgroundColor: "#fff9ec", mb: 2 }}>
+          <CardContent sx={{ py: 2 }}>
+            <Box
               sx={{
-                border: `2px solid ${borderColor}`,
-                boxShadow: 3,
-                height: "140px",
-                marginLeft: "10px",
-                backgroundColor: "#fff9ec",
-                p: 2,
-                mt: 2,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                  boxShadow: 6,
-                },
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+                gap: 2,
               }}
             >
-              <CardContent>
+              {/* Avatar + Name */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
+                  position="relative"
+                  display="inline-block"
+                  onMouseEnter={() => setHovered(true)}
+                  onMouseLeave={() => setHovered(false)}
                 >
-                  {/* 👤 Left Section - Avatar + Welcome */}
-                  <Box display="flex" alignItems="center">
-                    {/* Avatar */}
-                    <Box
-                      position="relative"
-                      display="inline-block"
-                      mr={2}
-                      onMouseEnter={() => setHovered(true)}
-                      onMouseLeave={() => setHovered(false)}
+                  <Avatar
+                    src={profileImage || `${API_BASE_URL}/uploads/Admin1by1/${personData?.profile_image}`}
+                    alt={personData?.fname}
+                    sx={{ width: 80, height: 80, border: `2px solid ${borderColor}`, cursor: "pointer" }}
+                    onClick={() => fileInputRef.current.click()}
+                  >
+                    {personData?.fname?.[0]}
+                  </Avatar>
+                  {hovered && (
+                    <label
+                      onClick={() => fileInputRef.current.click()}
+                      style={{
+                        position: "absolute", bottom: -4, right: 0, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        borderRadius: "50%", backgroundColor: "#ffffff",
+                        border: `2px solid ${borderColor}`, width: 30, height: 30,
+                      }}
                     >
-                      <Avatar
-                        src={
-                          profileImage ||
-                          `${API_BASE_URL}/uploads/Admin1by1/${personData?.profile_image}`
-                        }
-                        alt={personData?.fname}
-                        sx={{
-                          width: 90,
-                          height: 90,
-                          border: `2px solid ${borderColor}`,
-                          cursor: "pointer",
-                          mt: -1.5,
-                        }}
-                        onClick={() => fileInputRef.current.click()}
-                      >
-                        {personData?.fname?.[0]}
-                      </Avatar>
-
-                      {hovered && (
-                        <label
-                          onClick={() => fileInputRef.current.click()}
-                          style={{
-                            position: "absolute",
-                            bottom: "-5px",
-                            right: 0,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "50%",
-                            backgroundColor: "#ffffff",
-                            border: `2px solid ${borderColor}`,
-                            width: "36px",
-                            height: "36px",
-                          }}
-                        >
-                          <AddCircleIcon
-                            sx={{
-                              color: settings?.header_color || "#1976d2",
-                              fontSize: 32,
-                              borderRadius: "50%",
-                            }}
-                          />
-                        </label>
-                      )}
-
-                      {/* Hidden file input */}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        style={{ display: "none" }}
-                        onChange={handleFileChange}
-                      />
-                    </Box>
-
-                    {/* Welcome text and Employee info */}
-                    <Box sx={{ color: titleColor }}>
-                      <Typography variant="h4" fontWeight="bold" mt={-1}>
-                        Welcome back!{" "}
-                        {personData
-                          ? `${personData.lname}, ${personData.fname} ${personData.mname || ""}`
-                          : ""}
-                      </Typography>
-
-                      <Typography variant="body1" color="black" fontSize={20}>
-                        <b>Employee ID:</b> {personData?.employee_id || "N/A"}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* 📅 Right Section - Date */}
-                  <Box textAlign="right" sx={{ color: "black" }}>
-                    <Typography
-                      variant="body1"
-                      fontSize="24px"
-                      fontWeight="bold"
-                    >
-                      {formattedDate}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      fontSize="24px"
-                      sx={{ textAlign: "center" }}
-                    >
-                      {formattedTime}
-                    </Typography>
-                  </Box>
+                      <AddCircleIcon sx={{ color: headerColor, fontSize: 26 }} />
+                    </label>
+                  )}
+                  <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
 
-        {/* ✅ Stats Section (4 in 1 row) */}
-        <Grid container spacing={2} justifyContent="center">
+                <Box sx={{ color: titleColor }}>
+                  <Typography variant="h5" fontWeight="bold" lineHeight={1.2}>
+                    Welcome back!{" "}
+                    {personData ? `${personData.lname}, ${personData.fname} ${personData.mname || ""}` : ""}
+                  </Typography>
+                  <Typography variant="body1" color="black" mt={0.5}>
+                    <b>Employee ID:</b> {personData?.employee_id || "N/A"}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Date + Time */}
+              <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
+                <Typography variant="h6" fontWeight="bold">{formattedDate}</Typography>
+                <Typography variant="h6">{formattedTime}</Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* ── Stats Row ── */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
           {stats.map((stat, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
-              <Card
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  border: `2px solid ${borderColor}`,
-                  backgroundColor: "#fef9e1",
-                  height: "100px",
-                  p: 3,
-                  borderRadius: 3,
-                  marginLeft: "10px",
-                  mt: "20px",
-                  transition: "transform 0.2s ease",
-                  "&:hover": { transform: "scale(1.03)" },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 70,
-                    height: 70,
-                    borderRadius: "50%",
-                    border: `2px solid ${borderColor}`,
-                    backgroundColor: stat.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    mr: 3,
-                  }}
-                >
+            <Grid item xs={12} sm={4} key={i}>
+              <Card sx={{ ...cardSx, backgroundColor: "#fef9e1", display: "flex", alignItems: "center", p: 2, gap: 2 }}>
+                <Box sx={{
+                  width: 64, height: 64, flexShrink: 0, borderRadius: "50%",
+                  border: `2px solid ${borderColor}`, backgroundColor: stat.color,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
                   {stat.icon}
                 </Box>
-
                 <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ color: subtitleColor }}
-                    fontSize={20}
-                    fontWeight={1200}
-                  >
+                  <Typography variant="subtitle2" sx={{ color: subtitleColor }} fontSize={16} fontWeight={700}>
                     {stat.label}
                   </Typography>
-                  <Typography variant="h5" fontWeight="bold">
-                    {stat.value}
-                  </Typography>
+                  <Typography variant="h5" fontWeight="bold">{stat.value}</Typography>
                 </Box>
               </Card>
             </Grid>
           ))}
         </Grid>
 
-        {/* Department Section */}
-        <Grid container spacing={3} sx={{ mt: 6 }}>
-          {/* Calendar Card */}
-          <Grid item xs={12} md={4}>
-            <Card
-              sx={{
-                border: `2px solid ${borderColor}`,
-                marginLeft: "10px",
-                boxShadow: 3,
-                p: 2,
-                width: 385,
-                height: 400,
-                marginTop: "-50px",
-                display: "flex",
-                borderRadius: "10px",
-                transition: "transform 0.2s ease",
-                "&:hover": { transform: "scale(1.03)" },
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-            >
-              <CardContent sx={{ p: 0, width: "100%" }}>
-                {/* Header with month + year + arrows */}
-                <Grid
-                  container
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{
-                    backgroundColor: settings?.header_color || "#1976d2",
-                    color: "white",
-                    border: `2px solid ${borderColor}`,
-                    borderBottom: "none", // prevent double border with body
-                    borderRadius: "8px 8px 0 0",
-                    padding: "10px 8px",
-                  }}
-                >
-                  <Grid item>
-                    <IconButton
-                      size="small"
-                      onClick={handlePrevMonth}
-                      sx={{ color: "white" }}
-                    >
-                      <ArrowBackIos fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                  <Grid item>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      {date.toLocaleString("default", { month: "long" })} {year}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    <IconButton
-                      size="small"
-                      onClick={handleNextMonth}
-                      sx={{ color: "white" }}
-                    >
-                      <ArrowForwardIos fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                </Grid>
+        {/* ── Bottom Three Columns ── */}
+        <Grid container spacing={2} alignItems="flex-start">
 
-                {/* Calendar Table */}
-                <Box
+          {/* LEFT — Calendar + Bar Chart */}
+          <Grid item xs={12} md={3}>
+            <Grid container direction="column" spacing={2}>
+
+              {/* Calendar */}
+              <Grid item>
+                <Card
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    borderLeft: `2px solid ${borderColor}`,
-                    borderRight: `2px solid ${borderColor}`,
-                    borderBottom: `2px solid ${borderColor}`,
-                    borderTop: `2px solid ${borderColor}`,
-                    borderRadius: "0 0 8px 8px",
-                    overflow: "hidden",
+                    border: `2px solid ${borderColor}`,
+                    boxShadow: 3,
+                    p: 2,
+                    borderRadius: "10px",
+                    transition: "transform 0.2s ease",
+                    "&:hover": { transform: "scale(1.03)" },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "center",
                   }}
                 >
-                  {/* Days of the week */}
-                  {days.map((day, idx) => (
-                    <Box
-                      key={idx}
+                  <CardContent sx={{ p: 0, width: "100%" }}>
+                    {/* Header with month + year + arrows */}
+                    <Grid
+                      container
+                      alignItems="center"
+                      justifyContent="space-between"
                       sx={{
-                        backgroundColor: "#f3f3f3",
-                        textAlign: "center",
-                        py: 1,
-                        fontWeight: "bold",
-                        borderBottom: `1px solid ${borderColor}`,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        color: "white",
+                        border: `2px solid ${borderColor}`,
+                        borderBottom: "none",
+                        borderRadius: "8px 8px 0 0",
+                        padding: "10px 8px",
                       }}
                     >
-                      {day}
-                    </Box>
-                  ))}
+                      <Grid item>
+                        <IconButton size="small" onClick={() => setCalDate(new Date(calYear, calMonth - 1, 1))} sx={{ color: "white" }}>
+                          <ArrowBackIos fontSize="small" />
+                        </IconButton>
+                      </Grid>
+                      <Grid item>
+                        <Typography variant="subtitle1" sx={{ fontWeight: "bold", fontSize: "14px" }}>
+                          {calDate.toLocaleString("default", { month: "long" })} {calYear}
+                        </Typography>
+                      </Grid>
+                      <Grid item>
+                        <IconButton size="small" onClick={() => setCalDate(new Date(calYear, calMonth + 1, 1))} sx={{ color: "white" }}>
+                          <ArrowForwardIos fontSize="small" />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
 
-                  {/* Dates */}
-                  {weeks.map((week, i) =>
-                    week.map((day, j) => {
-                      if (!day) {
-                        return (
-                          <Box
-                            key={`${i}-${j}`}
-                            sx={{
-                              height: 45,
-                              backgroundColor: "#fff",
-                            }}
-                          />
-                        );
-                      }
-
-                      const isToday =
-                        day === today &&
-                        month === thisMonth &&
-                        year === thisYear;
-                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                      const isHoliday = holidays[dateKey];
-
-                      const dayCell = (
+                    {/* Calendar Table */}
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        borderLeft: `2px solid ${borderColor}`,
+                        borderRight: `2px solid ${borderColor}`,
+                        borderBottom: `2px solid ${borderColor}`,
+                        borderTop: `2px solid ${borderColor}`,
+                        borderRadius: "0 0 8px 8px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Days of the week */}
+                      {days.map((day, idx) => (
                         <Box
+                          key={idx}
                           sx={{
-                            height: 45,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "50%",
-                            backgroundColor: isToday
-                              ? settings?.header_color || "#1976d2"
-                              : isHoliday
-                                ? "#E8C999"
-                                : "#fff",
-                            color: isToday ? "white" : "black",
-                            fontWeight: isHoliday ? "bold" : "500",
-                            cursor: isHoliday ? "pointer" : "default",
-                            "&:hover": {
-                              backgroundColor: isHoliday ? "#F5DFA6" : "#000",
-                              color: isHoliday ? "black" : "white",
-                            },
+                            backgroundColor: "#f3f3f3",
+                            textAlign: "center",
+                            py: 1,
+                            fontWeight: "bold",
+                            fontSize: "12px",
+                            borderBottom: `1px solid ${borderColor}`,
                           }}
                         >
                           {day}
                         </Box>
-                      );
+                      ))}
 
-                      return isHoliday ? (
-                        <MuiTooltip
-                          key={`${i}-${j}`}
-                          title={
-                            <>
-                              <Typography fontWeight="bold">
-                                {isHoliday.localName}
-                              </Typography>
-                              <Typography variant="caption">
-                                {isHoliday.date}
-                              </Typography>
-                            </>
+                      {/* Dates */}
+                      {weeks.map((week, i) =>
+                        week.map((day, j) => {
+                          if (!day) {
+                            return <Box key={`${i}-${j}`} sx={{ height: 45, backgroundColor: "#fff" }} />;
                           }
-                          arrow
-                          placement="top"
-                        >
-                          {dayCell}
-                        </MuiTooltip>
-                      ) : (
-                        <React.Fragment key={`${i}-${j}`}>
-                          {dayCell}
-                        </React.Fragment>
-                      );
-                    }),
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
+                          const isToday = day === today && calMonth === thisMonth && calYear === thisYear;
+                          const dateKey = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                          const isHoliday = holidays[dateKey];
 
-            {/* Applicants Per Month */}
-            <Grid item xs={12} md={12} sx={{ mt: 5 }}>
-              <Card
-                sx={{
-                  overflow: "visible", // 🔥 allow tooltips to appear
-                  position: "relative", // required for tooltip placement
-                  p: 2,
-                  marginLeft: "10px",
-                  marginTop: "-20px",
-                  borderRadius: 3,
-                  width: 385,
-                  height: 380,
-                  border: `2px solid ${borderColor}`,
-                  boxShadow: 3,
-                }}
-              >
-                <CardContent sx={{ height: "100%", p: 0 }}>
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    mb={1}
-                    sx={{ color: "maroon", pl: 2, pt: 2 }}
-                  >
+                          const dayCell = (
+                            <Box
+                              sx={{
+                                height: 45,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRadius: "50%",
+                                fontSize: "12px",
+                                backgroundColor: isToday
+                                  ? settings?.header_color || "#1976d2"
+                                  : isHoliday
+                                    ? "#E8C999"
+                                    : "#fff",
+                                color: isToday ? "white" : "black",
+                                fontWeight: isHoliday ? "bold" : "500",
+                                cursor: isHoliday ? "pointer" : "default",
+                                "&:hover": {
+                                  backgroundColor: isHoliday ? "#F5DFA6" : "#000",
+                                  color: isHoliday ? "black" : "white",
+                                },
+                              }}
+                            >
+                              {day}
+                            </Box>
+                          );
+
+                          return isHoliday ? (
+                            <MuiTooltip
+                              key={`${i}-${j}`}
+                              title={
+                                <>
+                                  <Typography fontWeight="bold">{isHoliday.localName}</Typography>
+                                  <Typography variant="caption">{isHoliday.date}</Typography>
+                                </>
+                              }
+                              arrow
+                              placement="top"
+                            >
+                              {dayCell}
+                            </MuiTooltip>
+                          ) : (
+                            <React.Fragment key={`${i}-${j}`}>{dayCell}</React.Fragment>
+                          );
+                        })
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Applicants Per Month Bar Chart */}
+              <Grid item>
+                <Card sx={{ ...cardSx, p: 2 }}>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: "maroon", mb: 1 }}>
                     Applicants Per Month
                   </Typography>
-
-                  <Box
-                    sx={{ height: "calc(100% - 40px)", overflow: "visible" }}
-                  >
+                  <Box sx={{ width: "100%", height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={monthlyApplicants}
-                        margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-                      >
+                      <BarChart data={monthlyApplicants} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
-
-                        <XAxis
-                          dataKey="month"
-                          tickFormatter={(month) => {
-                            const [year, m] = month.split("-");
-                            return new Date(`${year}-${m}-01`).toLocaleString(
-                              "default",
-                              {
-                                month: "short",
-                              },
-                            );
-                          }}
-                        />
-
-                        <YAxis allowDecimals={false} />
-
+                        <XAxis dataKey="month" tickFormatter={(m) => { const [y, mo] = m.split("-"); return new Date(`${y}-${mo}-01`).toLocaleString("default", { month: "short" }); }} tick={{ fontSize: 11 }} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                         <Tooltip
-                          wrapperStyle={{ zIndex: 99999 }} // 🔥 forces tooltip to show
-                          labelFormatter={(month) => {
-                            const [year, m] = month.split("-");
-                            return new Date(`${year}-${m}-01`).toLocaleString(
-                              "default",
-                              {
-                                month: "long",
-                                year: "numeric",
-                              },
-                            );
-                          }}
-                          formatter={(value) => [
-                            `${value} applicants`,
-                            "Total",
-                          ]}
+                          wrapperStyle={{ zIndex: 9999 }}
+                          labelFormatter={(m) => { const [y, mo] = m.split("-"); return new Date(`${y}-${mo}-01`).toLocaleString("default", { month: "long", year: "numeric" }); }}
+                          formatter={(v) => [`${v} applicants`, "Total"]}
                         />
-
                         <Bar dataKey="total">
-                          {monthlyApplicants.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={
-                                [
-                                  "#FF0000",
-                                  "#00C853",
-                                  "#2196F3",
-                                  "#FFD600",
-                                  "#FF6D00",
-                                ][index % 5]
-                              }
-                            />
+                          {monthlyApplicants.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={["#FF0000", "#00C853", "#2196F3", "#FFD600", "#FF6D00"][index % 5]} />
                           ))}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </Box>
-                </CardContent>
-              </Card>
+                </Card>
+              </Grid>
+
             </Grid>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Card
-              sx={{
-                width: 600,
-                height: 800,
-                p: 3,
-                borderRadius: 3,
-                marginTop: "-45px",
-                marginLeft: "-6rem",
-                boxShadow: 3,
-                border: `2px solid ${borderColor}`,
-                background: "#ffffff",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* Title */}
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                color={subtitleColor}
-                sx={{ textAlign: "center", mb: 2 }}
-              >
+          {/* MIDDLE — Enrollment Statistics */}
+          <Grid item xs={12} md={4.5}>
+            <Card sx={{ ...cardSx, p: 3, backgroundColor: "#ffffff" }}>
+              <Typography variant="h6" fontWeight="bold" color={subtitleColor} sx={{ textAlign: "center", mb: 2 }}>
                 Enrollment Statistics
               </Typography>
 
-              {/* School Year Filter */}
-              <FormControl fullWidth size="small" sx={{ mb: 4 }}>
+              <FormControl fullWidth size="small" sx={{ mb: 3 }}>
                 <InputLabel>School Year</InputLabel>
-                <Select
-                  value={selectedYear}
-                  label="School Year"
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  {years.map((yr) => (
-                    <MenuItem key={yr.year_id} value={yr.year_id}>
-                      {yr.current_year}
-                    </MenuItem>
-                  ))}
+                <Select value={selectedYear} label="School Year" onChange={(e) => setSelectedYear(e.target.value)}>
+                  {years.map((yr) => <MenuItem key={yr.year_id} value={yr.year_id}>{yr.current_year}</MenuItem>)}
                 </Select>
               </FormControl>
 
-              {/* GRAPH 1 — Academic Program */}
-              <Box sx={{ mb: 5 }}>
-                <Typography fontWeight="bold" mb={2}>
-                  Academic Program Distribution
-                </Typography>
-
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={programData}>
+              <Typography fontWeight="bold" mb={1}>Academic Program Distribution</Typography>
+              <Box sx={{ width: "100%", height: 220, mb: 3 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={programData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis allowDecimals={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Bar dataKey="value">
-                      {programData.map((entry, index) => (
-                        <Cell
-                          key={index}
-                          fill={["#5C6BC0", "#26A69A", "#FFA726"][index % 3]}
-                        />
-                      ))}
+                      {programData.map((_, index) => <Cell key={index} fill={["#5C6BC0", "#26A69A", "#FFA726"][index % 3]} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
 
-              {/* GRAPH 2 — Student Classification */}
-              <Box>
-                <Typography fontWeight="bold" mb={2}>
-                  Student Classification
-                </Typography>
-
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={studentTypeData}>
+              <Typography fontWeight="bold" mb={1}>Student Classification</Typography>
+              <Box sx={{ width: "100%", height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={studentTypeData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis allowDecimals={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Bar dataKey="value">
-                      {studentTypeData.map((entry, index) => (
-                        <Cell
-                          key={index}
-                          fill={
-                            ["#EF5350", "#66BB6A", "#42A5F5", "#FFCA28"][
-                              index % 4
-                            ]
-                          }
-                        />
-                      ))}
+                      {studentTypeData.map((_, index) => <Cell key={index} fill={["#EF5350", "#66BB6A", "#42A5F5", "#FFCA28"][index % 4]} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -1096,171 +676,62 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Card
-              sx={{
-                marginTop: "-45px",
-                marginLeft: ".5rem",
-                width: 495,
-                height: 790,
-                p: 3,
-                borderRadius: 3,
-                boxShadow: 3,
-                display: "flex",
-                flexDirection: "column",
-                background: "#ffffff",
-                border: `2px solid ${borderColor}`,
-              }}
-            >
-              {/* Header Row: Title + Filters */}
-              <Box
-                sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
-              >
-                <Typography
-                  variant="h6"
-                  fontWeight="bold"
-                  color={subtitleColor}
-                >
+          {/* RIGHT — Applicant Overview */}
+          <Grid item xs={12} md={4.5}>
+            <Card sx={{ ...cardSx, p: 3, backgroundColor: "#ffffff", display: "flex", flexDirection: "column" }}>
+              {/* Title + Filters */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 1, mb: 2 }}>
+                <Typography variant="h6" fontWeight="bold" color={subtitleColor}>
                   Applicant Overview
                 </Typography>
-
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  {/* Year Dropdown */}
-                  <FormControl size="small" sx={{ width: 130 }}>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
                     <InputLabel>School Year</InputLabel>
-                    <Select
-                      value={selectedYear}
-                      label="School Year"
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                    >
-                      {years.map((yr) => (
-                        <MenuItem key={yr.year_id} value={yr.year_id}>
-                          {yr.current_year}
-                        </MenuItem>
-                      ))}
+                    <Select value={selectedYear} label="School Year" onChange={(e) => setSelectedYear(e.target.value)}>
+                      {years.map((yr) => <MenuItem key={yr.year_id} value={yr.year_id}>{yr.current_year}</MenuItem>)}
                     </Select>
                   </FormControl>
-
-                  {/* Month Dropdown */}
-                  <FormControl size="small" sx={{ width: 130 }}>
-                    <InputLabel>Select Month</InputLabel>
-                    <Select
-                      label="Select Month"
-                      value={months}
-                      onChange={(e) => setMonths(e.target.value)}
-                    >
-                      <MenuItem value="January">January</MenuItem>
-                      <MenuItem value="February">February</MenuItem>
-                      <MenuItem value="March">March</MenuItem>
-                      <MenuItem value="April">April</MenuItem>
-                      <MenuItem value="May">May</MenuItem>
-                      <MenuItem value="June">June</MenuItem>
-                      <MenuItem value="July">July</MenuItem>
-                      <MenuItem value="August">August</MenuItem>
-                      <MenuItem value="September">September</MenuItem>
-                      <MenuItem value="October">October</MenuItem>
-                      <MenuItem value="November">November</MenuItem>
-                      <MenuItem value="December">December</MenuItem>
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Month</InputLabel>
+                    <Select label="Month" value={months} onChange={(e) => setMonths(e.target.value)}>
+                      {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m) => (
+                        <MenuItem key={m} value={m}>{m}</MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Box>
               </Box>
 
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={4}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      background: "#FCBEBB",
-                      borderRadius: 2,
-                      border: "2px solid black",
-                      textAlign: "center",
-                      height: 100,
-                    }}
-                  >
-                    <Typography variant="h5" fontWeight="bold">
-                      {applicant.totalApplicants}
-                    </Typography>
-                    <Typography fontSize={14}>Total Applicants</Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={4}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      background: "#FCBEBB",
-                      borderRadius: 2,
-                      textAlign: "center",
-                      border: "2px solid black",
-                      height: 100,
-                    }}
-                  >
-                    <Typography variant="h5" fontWeight="bold">
-                      {applicant.male}
-                    </Typography>
-                    <Typography fontSize={14}>Male</Typography>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={4}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      background: "#FCBEBB",
-                      borderRadius: 2,
-                      border: "2px solid black",
-                      textAlign: "center",
-                      height: 100,
-                    }}
-                  >
-                    <Typography variant="h5" fontWeight="bold">
-                      {applicant.female}
-                    </Typography>
-                    <Typography fontSize={14}>Female</Typography>
-                  </Box>
-                </Grid>
+              {/* Stat boxes */}
+              <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                {[
+                  { label: "Total Applicants", value: applicant.totalApplicants },
+                  { label: "Male", value: applicant.male },
+                  { label: "Female", value: applicant.female },
+                ].map((item, i) => (
+                  <Grid item xs={4} key={i}>
+                    <Box sx={{ p: 1.5, background: "#FCBEBB", borderRadius: 2, border: "2px solid black", textAlign: "center" }}>
+                      <Typography variant="h5" fontWeight="bold">{item.value}</Typography>
+                      <Typography fontSize={12}>{item.label}</Typography>
+                    </Box>
+                  </Grid>
+                ))}
               </Grid>
 
               <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
                 ECAT Monitoring Panel:
               </Typography>
 
-              <Box
-                sx={{
-                  flexGrow: 1,
-                  background: "#f1f3f4",
-                  border: "2px solid black",
-                  borderRadius: 3,
-                  border: "2px solid black",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  fontSize: 14,
-                  color: "#6c6c6c",
-                  height: 300,
-                }}
-              >
+              <Box sx={{
+                flex: 1, minHeight: 260,
+                background: "#f1f3f4", border: "2px solid black", borderRadius: 3,
+                display: "flex", justifyContent: "center", alignItems: "center",
+              }}>
                 {pieData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={110}
-                        label
-                      >
-                        {pieData.map((_, i) => (
-                          <Cell
-                            key={i}
-                            fill={
-                              ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"][i]
-                            }
-                          />
-                        ))}
+                      <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                        {pieData.map((_, i) => <Cell key={i} fill={["#0088FE", "#00C49F", "#FFBB28", "#FF8042"][i]} />)}
                       </Pie>
                       <Tooltip />
                       <Legend />
@@ -1272,6 +743,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
               </Box>
             </Card>
           </Grid>
+
         </Grid>
       </Box>
     </Box>

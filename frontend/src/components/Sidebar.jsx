@@ -2,23 +2,22 @@ import React, { useState, useEffect, useContext } from "react";
 import { SettingsContext } from "../App";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Dashboard,
-  Apartment,
-  Business,
-  LibraryBooks,
-  People,
-  LogoutOutlined,
-  Settings,
-  AccountCircle,
-  AccountCircleOutlined,
-  Token,
+  AccountCircle, AdminPanelSettings, Assessment, Assignment, Badge,
+  CalendarToday, Campaign, ChangeCircle, Class, CollectionsBookmark,
+  ContactEmergency, DateRange, Dashboard, Description, EditCalendar,
+  EditNote, Email, EventAvailable, EventNote, FactCheck, FolderCopy,
+  FormatListNumbered, HealthAndSafety, HelpOutline, HistoryEdu, Info,
+  Layers, ListAlt, ListAltOutlined, MedicalServices, MeetingRoom,
+  MenuBook, Numbers, PersonAdd, Psychology, School, Score, Search,
+  Security, SupervisorAccount, TableChart, Timeline, Update, Apartment,
+  Business, LibraryBooks, People, LogoutOutlined, Settings, ExpandMore,
+  ExpandLess,
 } from "@mui/icons-material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import LockResetIcon from "@mui/icons-material/LockReset";
-import { HistoryOutlined } from "@mui/icons-material";
-import { Avatar, Typography } from "@mui/material";
+import { Avatar, Tooltip, Typography } from "@mui/material";
 import axios from "axios";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import GradeIcon from "@mui/icons-material/Grade";
@@ -27,1307 +26,761 @@ import PersonIcon from "@mui/icons-material/Person";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import WorkIcon from "@mui/icons-material/Work";
 import SchoolIcon from "@mui/icons-material/School";
-import AssessmentIcon from "@mui/icons-material/Assessment";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import API_BASE_URL from "../apiConfig";
-import EaristLogo from "../assets/EaristLogo.png"
+import EaristLogo from "../assets/EaristLogo.png";
 
+/* ─────────────────────────────────────────────
+   Dynamic styles — re-injected when settings change
+───────────────────────────────────────────── */
+function buildSidebarStyles(s = {}) {
+  const accent      = s.main_button_color  || "#7c3aed";
+  const border      = s.border_color       || "#e8e8e8";
+  const titleColor  = s.title_color        || "#111111";
+  const subColor    = s.subtitle_color     || "#777777";
+  const subBtnColor = s.sub_button_color   || "#f5f5f5";
+  const profileBg   = s.header_color       ? `${s.header_color}18` : "#f7f7f7";
+
+  return `
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+  .sb-root {
+    font-family: 'Poppins', sans-serif;
+    width: 290px;
+    height: calc(100vh - 64px - 42px);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid ${border};
+    position: fixed;
+    top: 64px;
+    bottom: 42px;
+    left: 0;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  /* ── Profile card ── */
+  .sb-profile {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 14px 18px;
+    margin: 12px 12px 12px;
+    background: ${profileBg};
+
+    border-radius: 10px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .sb-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .sb-profile-info { overflow: hidden; }
+  .sb-profile-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: ${titleColor};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .sb-profile-role {
+    font-size: 12.5px;
+    color: ${subColor};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .sb-upload-btn {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  }
+
+  /* ── Scroll area ── */
+  .sb-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px 10px 0;
+    scrollbar-width: thin;
+    scrollbar-color: ${border} transparent;
+  }
+  .sb-scroll::-webkit-scrollbar { width: 4px; }
+  .sb-scroll::-webkit-scrollbar-track { background: transparent; }
+  .sb-scroll::-webkit-scrollbar-thumb { background: ${border}; border-radius: 4px; }
+
+  /* ── Section label ── */
+  .sb-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: ${subColor};
+    padding: 10px 8px 4px;
+  }
+
+  /* ── Nav item ── */
+  .sb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: black;
+    font-size: 11.5px;
+    font-weight: 400;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1;
+  }
+  .sb-item .sb-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: .75;
+  }
+  .sb-item:hover { background: ${subBtnColor}; color: ${titleColor}; }
+  .sb-item.active { background: ${accent}; color: #fff !important; }
+  .sb-item.active:hover { background: ${accent}; }
+  .sb-item.active .sb-icon { opacity: 1; }
+  .sb-item-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Group toggle ── */
+  .sb-group-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: ${titleColor};
+    font-size: 11.5px;
+    font-weight: 400;
+    font-family: 'Poppins', sans-serif;
+    transition: background .15s;
+    text-align: left;
+    margin-bottom: 1px;
+    line-height: 1;
+    vertical-align: middle;
+  }
+  .sb-group-btn:hover { background: ${subBtnColor}; color: ${titleColor}; }
+  .sb-group-btn.open { color: ${accent}; }
+  .sb-group-label { flex: 1; }
+  .sb-group-chevron { flex-shrink: 0; opacity: .5; }
+  .sb-group-chevron svg { font-size: 16px !important; }
+
+  /* Sub-items indent */
+  .sb-sub-item {
+    padding-left: 22px;
+  }
+
+  /* ── Divider ── */
+  .sb-divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 8px 0;
+  }
+
+  /* ── Footer (logout) ── */
+  .sb-footer {
+    padding: 10px;
+    border-top: 1px solid #f0f0f0;;
+    flex-shrink: 0;
+  }
+  .sb-logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #e53e3e;
+    transition: background .15s;
+  }
+  .sb-logout:hover { background: #fff5f5; }
+  .sb-logout .sb-icon { opacity: .8; }
+  `;
+}
+
+function injectStyles(settings) {
+  let tag = document.getElementById("sb-styles");
+  if (!tag) {
+    tag = document.createElement("style");
+    tag.id = "sb-styles";
+    document.head.appendChild(tag);
+  }
+  tag.textContent = buildSidebarStyles(settings);
+}
+
+/* ─────────────────────────────────────────────
+   Small reusable pieces
+───────────────────────────────────────────── */
+function NavItem({ to, icon: Icon, label, active, onClick, sub = false }) {
+  const cls = ["sb-item", active ? "active" : "", sub ? "sb-sub-item" : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  if (onClick) {
+    return (
+      <div className={cls} onClick={onClick}>
+        {Icon && <span className="sb-icon"><Icon sx={{ fontSize: 18 }} /></span>}
+        <span className="sb-item-label">{label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <Link to={to} className={cls}>
+      {Icon && <span className="sb-icon"><Icon sx={{ fontSize: 18 }} /></span>}
+      <span className="sb-item-label">{label}</span>
+    </Link>
+  );
+}
+
+function GroupToggle({ label, icon: Icon, open, onToggle }) {
+  return (
+    <button
+      type="button"
+      className={`sb-group-btn ${open ? "open" : ""}`}
+      onClick={onToggle}
+    >
+      {Icon && <span className="sb-icon" style={{ opacity: .7, display: 'flex', alignItems: 'center' }}><Icon sx={{ fontSize: 18 }} /></span>}
+      <span className="sb-group-label">{label}</span>
+      <span className="sb-group-chevron">
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </span>
+    </button>
+  );
+}
+
+function ProfileUploadInput({ id, onChange }) {
+  return (
+    <input
+      id={id}
+      type="file"
+      accept="image/*"
+      onChange={onChange}
+      style={{ display: "none" }}
+    />
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Main SideBar
+───────────────────────────────────────────── */
 const SideBar = ({ setIsAuthenticated, profileImage, setProfileImage }) => {
   const settings = useContext(SettingsContext);
+  const navigate = useNavigate();
 
-  const [titleColor, setTitleColor] = useState("#000000");
-  const [subtitleColor, setSubtitleColor] = useState("#555555");
-  const [borderColor, setBorderColor] = useState("#000000");
-  const [mainButtonColor, setMainButtonColor] = useState("#1976d2");
-  const [subButtonColor, setSubButtonColor] = useState("#ffffff");   // ✅ NEW
-  const [stepperColor, setStepperColor] = useState("#000000");       // ✅ NEW
+  // ── theme ──
+  const accentColor = settings?.main_button_color || "#7c3aed";
+  const borderColor = settings?.border_color || "#e8e8e8";
 
-  const [fetchedLogo, setFetchedLogo] = useState(null);
-  const [companyName, setCompanyName] = useState("");
-  const [shortTerm, setShortTerm] = useState("");
-  const [campusAddress, setCampusAddress] = useState("");
+  // ── school info ──
+  const logoUrl = settings?.logo_url ? `${API_BASE_URL}${settings.logo_url}` : EaristLogo;
+  const companyName = settings?.company_name || "EARIST";
+  const shortTerm = settings?.short_term || "EARIST";
 
+  // ── user state ──
+  const [role, setRole] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [employeeID, setEmployeeID] = useState("");
+  const [personData, setPersonData] = useState({ profile_image: "", fname: "", lname: "", role: "" });
+  const [userAccessList, setUserAccessList] = useState({});
+  const [accessDescription, setAccessDescription] = useState("");
+  const [dir, setDir] = useState("Admin1by1");
+
+  const [groupOpen, setGroupOpen] = useState({});
+  const toggleGroup = (key) => setGroupOpen((p) => ({ ...p, [key]: !p[key] }));
+  const isGroupOpen = (key) => groupOpen[key] === true; // default closed
+
+  // ── inject styles whenever settings change ──
   useEffect(() => {
-    if (!settings) return;
-
-    // 🎨 Colors
-    if (settings.title_color) setTitleColor(settings.title_color);
-    if (settings.subtitle_color) setSubtitleColor(settings.subtitle_color);
-    if (settings.border_color) setBorderColor(settings.border_color);
-    if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
-    if (settings.sub_button_color) setSubButtonColor(settings.sub_button_color);   // ✅ NEW
-    if (settings.stepper_color) setStepperColor(settings.stepper_color);           // ✅ NEW
-
-    // 🏫 Logo
-    if (settings.logo_url) {
-      setFetchedLogo(`${API_BASE_URL}${settings.logo_url}`);
-    } else {
-      setFetchedLogo(EaristLogo);
-    }
-
-    // 🏷️ School Information
-    if (settings.company_name) setCompanyName(settings.company_name);
-    if (settings.short_term) setShortTerm(settings.short_term);
-    if (settings.campus_address) setCampusAddress(settings.campus_address);
-
+    injectStyles(settings);
   }, [settings]);
 
-  const navigate = useNavigate();
-  const [role, setRole] = useState("");
-  const [personData, setPersonData] = useState({
-    profile_image: "",
-    fname: "",
-    lname: "",
-    role: "",
-  });
-
+  // ── auth check ──
   useEffect(() => {
     const token = localStorage.getItem("token");
     const savedRole = localStorage.getItem("role");
     const storedID = localStorage.getItem("person_id");
-
     if (token && savedRole && storedID) {
       try {
         const decoded = JSON.parse(atob(token.split(".")[1]));
-        const currentTime = Date.now() / 1000;
-
-        if (decoded.exp < currentTime) {
-          // Token expired
-          localStorage.removeItem("token");
-          localStorage.removeItem("role");
-          localStorage.removeItem("person_id");
+        if (decoded.exp < Date.now() / 1000) {
+          ["token", "role", "person_id"].forEach((k) => localStorage.removeItem(k));
           setIsAuthenticated(false);
           navigate("/");
         } else {
-          setRole(savedRole); // ✅ Load from saved value
+          setRole(savedRole);
           fetchPersonData(storedID, savedRole);
           setIsAuthenticated(true);
         }
-      } catch (err) {
-        console.log("Token decode error:", err);
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
+      } catch {
+        ["token", "role"].forEach((k) => localStorage.removeItem(k));
         setIsAuthenticated(false);
         navigate("/");
       }
     } else {
-      console.log("Missing token or role");
       setIsAuthenticated(false);
       navigate("/");
     }
   }, []);
 
-  const [userID, setUserID] = useState("");
-  const [userRole, setUserRole] = useState("");
-  const [employeeID, setEmployeeID] = useState("");
-  const [hasAccess, setHasAccess] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Convert access list object to Set()
-  function accessObjToSet(userAccessList) {
-    const set = new Set();
-    for (const k in userAccessList) {
-      if (userAccessList[k]) set.add(Number(k));
-    }
-    return set;
-  }
-
-  // Duplicate registrar dashboard logic from LoginEnrollment
-  function getRegistrarDashboard(accessSet) {
-    if (accessSet.has(101)) return "/registrar_dashboard";                 // Clinic Registrar
-    if (accessSet.has(102)) return "/enrollment_officer_dashboard";        // Enrollment Registrar
-    if (accessSet.has(103)) return "/admission_officer_dashboard";         // Admission Registrar
-    return "/registrar_dashboard";
-  }
-
-  // ✅ Access List Map
-  const [userAccessList, setUserAccessList] = useState({});
-
-  // Apply settings
-  useEffect(() => {
-    if (!settings) return;
-
-    setTitleColor(settings.title_color || "#000000");
-    setBorderColor(settings.border_color || "#000000");
-    setMainButtonColor(settings.main_button_color || "#1976d2");
-  }, [settings]);
-
-  // Load user & access
+  // ── access ──
   useEffect(() => {
     const email = localStorage.getItem("email");
-    const role = localStorage.getItem("role");
+    const r = localStorage.getItem("role");
     const id = localStorage.getItem("person_id");
     const empID = localStorage.getItem("employee_id");
-
-    if (!email || !role || !id) {
-      window.location.href = "/login";
-      return;
-    }
-
-    setUserID(id);
-    setUserRole(role);
-
-    // ✅ Applicants don't have employee_id
-    if (role === "applicant") {
-      setIsAuthenticated(true);
-      return; // STOP HERE — no access list needed
-    }
-
-    // For all other roles
-    if (!empID) {
-      window.location.href = "/login";
-      return;
-    }
-
+    if (!email || !r || !id) { window.location.href = "/login"; return; }
+    setUserRole(r);
+    if (r === "applicant") { setIsAuthenticated(true); return; }
+    if (!empID) { window.location.href = "/login"; return; }
     setEmployeeID(empID);
     fetchUserAccessList(empID);
   }, []);
 
-  // ✅ ACCESS LOADER
-  const fetchUserAccessList = async (employeeID) => {
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/api/page_access/${employeeID}`
-      );
+  useEffect(() => {
+    if (!employeeID) return;
+    axios.get(`${API_BASE_URL}/api/access_level/${employeeID}`)
+      .then((res) => setAccessDescription(res.data?.access_description || ""))
+      .catch(() => {});
+  }, [employeeID]);
 
-      const accessMap = data.reduce((acc, item) => {
+  useEffect(() => {
+    const map = { applicant: "Applicant1by1", student: "Student1by1", faculty: "Faculty1by1" };
+    setDir(map[userRole] || "Admin1by1");
+  }, [userRole]);
+
+  const fetchPersonData = async (person_id, r) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/person_data/${person_id}/${r}`);
+      setPersonData(res.data);
+    } catch {}
+  };
+
+  const fetchUserAccessList = async (empID) => {
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/api/page_access/${empID}`);
+      const map = data.reduce((acc, item) => {
         acc[item.page_id] = item.page_privilege === 1;
         return acc;
       }, {});
-
-      setUserAccessList(accessMap);
-    } catch (err) {
-      console.error("Access list error:", err);
-    }
+      setUserAccessList(map);
+    } catch {}
   };
 
-  const groupedMenu = [
-    {
-      items: [
-        { title: "Admission Management", path: "/admission_dashboard", icon: Business, page_id: 92 },
-        { title: "Course Management", path: "/course_management", icon: LibraryBooks, page_id: 93 },
-        { title: "Department Management", path: "/department_dashboard", icon: Apartment, page_id: 94 },
-        { title: "System Management", path: "/system_dashboard", icon: Settings, page_id: 95 },
-        { title: "Account Management", path: "/account_dashboard", icon: People, page_id: 96 },
-        { title: "History Logs", path: "/history_logs", icon: HistoryOutlined, page_id: 97 },
-      ],
-    },
-  ];
-
-  const [accessDescription, setAccessDescription] = useState("");
-
-  useEffect(() => {
-    if (!employeeID) return;
-
-    const fetchAccessDescription = async () => {
-      try {
-        const res = await axios.get(
-          `${API_BASE_URL}/api/access_level/${employeeID}`
-        );
-        setAccessDescription(res.data?.access_description || "");
-      } catch (error) {
-        console.error("Error fetching access level:", error);
-      }
-    };
-
-    fetchAccessDescription();
-  }, [employeeID]);
-
   const Logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("email");
-    localStorage.removeItem("role");
-    localStorage.removeItem("person_id");
+    ["token", "email", "role", "person_id"].forEach((k) => localStorage.removeItem(k));
     setIsAuthenticated(false);
     navigate("/");
   };
 
-  const fetchPersonData = async (person_id, role) => {
+  // ── profile upload handler factory ──
+  const makeUploadHandler = (endpoint, uploadDir) => async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (role === "applicant") setProfileImage(URL.createObjectURL(file));
     try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/person_data/${person_id}/${role}`
-      );
-      setPersonData(res.data);
-    } catch (err) {
-      console.log(err);
-    }
+      const person_id = localStorage.getItem("person_id");
+      const r = localStorage.getItem("role");
+      const formData = new FormData();
+      formData.append("profile_picture", file);
+      formData.append("person_id", person_id);
+      await axios.post(`${API_BASE_URL}${endpoint}`, formData);
+      const updated = await axios.get(`${API_BASE_URL}/api/person_data/${person_id}/${r}`);
+      setPersonData(updated.data);
+      setProfileImage(`${API_BASE_URL}/uploads/${uploadDir}/${updated.data.profile_image}?t=${Date.now()}`);
+    } catch {}
   };
 
-  const [dir, setDir] = useState("");
+  const uploadHandlers = {
+    registrar: makeUploadHandler("/admin/update_registrar", "Admin1by1"),
+    applicant: makeUploadHandler("/form/upload-profile-picture", "Applicant1by1"),
+    faculty: makeUploadHandler("/faculty/update_faculty", "Faculty1by1"),
+    student: makeUploadHandler("/student/update_student", "Student1by1"),
+  };
 
-  useEffect(() => {
-    if (!userRole) return;
+  // ── helpers ──
+  function accessObjToSet(list) {
+    const s = new Set();
+    for (const k in list) { if (list[k]) s.add(Number(k)); }
+    return s;
+  }
+  function getRegistrarDashboard(accessSet) {
+    if (accessSet.has(101)) return "/registrar_dashboard";
+    if (accessSet.has(102)) return "/enrollment_officer_dashboard";
+    if (accessSet.has(103)) return "/admission_officer_dashboard";
+    return "/registrar_dashboard";
+  }
 
-    if (userRole === "applicant") {
-      setDir("Applicant1by1");
-    } else if (userRole === "student") {
-      setDir("Student1by1");
-    } else if (userRole === "faculty") {
-      setDir("Faculty1by1");
-    } else {
-      setDir("Admin1by1");
-    }
-  }, [userRole]);
+  const loc = typeof window !== "undefined" ? window.location.pathname : "";
+  const isActive = (path) => loc === path;
+  const isActivePrefix = (prefix) => loc.startsWith(prefix);
+
+  // ── profile avatar ──
+  const avatarSrc = profileImage || (personData?.profile_image
+    ? `${API_BASE_URL}/uploads/${dir}/${personData.profile_image}?t=${Date.now()}`
+    : null);
+
+  const showUploadFor = ["registrar", "applicant", "faculty", "student"].includes(role);
+
+  // ── registrar menu data (same as original) ──
+  const admissionMenuGroups = [
+    { key: "admissionOffice", label: "Admission Office", icon: AdminPanelSettings, items: [
+      { title: "Applicant List", link: "/applicant_list_admin", icon: ListAltOutlined, page_id: 7 },
+      { title: "Applicant Form", link: "/admin_dashboard1", icon: AccountCircle, page_id: 1 },
+      { title: "Documents Submitted", link: "/student_requirements", icon: Description, page_id: 61 },
+      { title: "Room Registration", link: "/room_registration", icon: MeetingRoom, page_id: 52 },
+      { title: "Exam Room Assignment", link: "/assign_entrance_exam", icon: MeetingRoom, page_id: 9 },
+      { title: "Exam Schedule Mgmt", link: "/assign_schedule_applicant", icon: EditCalendar, page_id: 11 },
+      { title: "Proctor's Applicant List", link: "/admission_schedule_room_list", icon: People, page_id: 33 },
+      { title: "Entrance Exam Scores", link: "/applicant_scoring", icon: Score, page_id: 8 },
+      { title: "Examination Permit", link: "/registrar_examination_profile", icon: Badge, page_id: 48 },
+      { title: "Verify Documents Schedule", link: "/verify_document_schedule", icon: People, page_id: 115 },
+      { title: "Verify Documents", link: "/verify_schedule", icon: People, page_id: 118 },
+      { title: "Evaluator Schedule Mgmt", link: "/evaluator_schedule_room_list", icon: People, page_id: 119 },
+      { title: "Announcement", link: "/announcement_for_admission", icon: Campaign, page_id: 98 },
+      { title: "Program Slot Remaining", link: "/program_slot_limit", icon: People, page_id: 110 },
+    ]},
+    { key: "enrollmentOfficer", label: "Enrollment Officer", icon: AssignmentIndIcon, items: [
+      { title: "Applicant List", link: "/applicant_list", icon: ListAlt, page_id: 6 },
+      { title: "Applicant Form", link: "/registrar_dashboard1", icon: AccountCircle, page_id: 43 },
+      { title: "Documents Submitted", link: "/registrar_requirements", icon: FolderCopy, page_id: 49 },
+      { title: "Qualifying / Interview Scores", link: "/qualifying_interview_exam_scores", icon: Assessment, page_id: 37 },
+      { title: "Student Numbering", link: "/student_numbering_per_college", icon: FormatListNumbered, page_id: 60 },
+      { title: "Course Tagging", link: "/course_tagging_for_college", icon: Class, page_id: 124 },
+      { title: "Qualifying Room Mgmt", link: "/assign_qualifying_interview_exam", icon: MeetingRoom, page_id: 10 },
+      { title: "Qualifying Schedule Mgmt", link: "/assign_schedule_applicants_qualifying_interview", icon: EditCalendar, page_id: 12 },
+      { title: "Interviewer Applicant List", link: "/enrollment_schedule_room_list", icon: People, page_id: 36 },
+      { title: "Search COR", link: "/search_cor_for_college", icon: Search, page_id: 125 },
+    ]},
+    { key: "medicalDental", label: "Medical & Dental", icon: MedicalServices, items: [
+      { title: "Applicant List", link: "/medical_applicant_list", icon: ListAltOutlined, page_id: 24 },
+      { title: "Applicant Form", link: "/medical_dashboard1", icon: AccountCircle, page_id: 25 },
+      { title: "Documents Submitted", link: "/medical_requirements", icon: Description, page_id: 30 },
+      { title: "Medical Requirements", link: "/medical_requirements_form", icon: MedicalServices, page_id: 31 },
+      { title: "Dental Assessment", link: "/dental_assessment", icon: HealthAndSafety, page_id: 19 },
+      { title: "Physical & Neuro Exam", link: "/physical_neuro_exam", icon: Psychology, page_id: 32 },
+      { title: "Health Records Certificate", link: "/health_record", icon: ContactEmergency },
+      { title: "Medical Certificate", link: "/medical_certificate", icon: MedicalServices },
+    ]},
+    { key: "registrarOffice", label: "Registrar's Office", icon: HistoryEdu, items: [
+      { title: "Applicant List", link: "/super_admin_applicant_list", icon: ListAltOutlined, page_id: 80 },
+      { title: "Student Numbering Panel", link: "/student_numbering", icon: Numbers, page_id: 59 },
+      { title: "Course Tagging", link: "/course_tagging", icon: Class, page_id: 17 },
+      { title: "Student List", link: "/student_list", icon: ListAltOutlined, page_id: 104 },
+      { title: "Applicant Form", link: "/readmission_dashboard1", icon: AccountCircle, page_id: 38 },
+      { title: "Submitted Documents", link: "/submitted_documents", icon: Description, page_id: 106 },
+      { title: "Class List", link: "/class_roster", icon: Class, page_id: 15 },
+      { title: "Search COR", link: "/search_cor", icon: Search, page_id: 56 },
+      { title: "Report of Grades", link: "/report_of_grades", icon: Assessment, page_id: 50 },
+      { title: "Transcript of Records", link: "/transcript_of_records", icon: HistoryEdu, page_id: 62 },
+      { title: "Grading Evaluation", link: "/grading_evaluation_for_registrar", icon: FactCheck, page_id: 105 },
+      { title: "COR Exporting Module", link: "/cor_exporting_module", icon: FolderCopy, page_id: 117 },
+    ]},
+  ];
+
+  const courseMenuGroups = [
+    { key: "courseManagement", label: "Course Management", icon: MenuBook, items: [
+      { title: "Program Tagging Panel", link: "/program_tagging", icon: CollectionsBookmark, page_id: 35 },
+      { title: "Program Payment", link: "/program_payment", icon: LibraryBooks, page_id: 111 },
+      { title: "Program Panel Form", link: "/program_panel", icon: LibraryBooks, page_id: 34 },
+      { title: "Create Curriculum", link: "/curriculum_panel", icon: EditNote, page_id: 18 },
+      { title: "Course Panel Form", link: "/course_panel", icon: MenuBook, page_id: 16 },
+      { title: "Program Unit", link: "/program_unit", icon: MenuBook, page_id: 113 },
+      { title: "Prerequisite", link: "/prerequisite", icon: MenuBook, page_id: 112 },
+    ]},
+  ];
+
+  const departmentMenuGroups = [
+    { key: "departmentManagement", label: "Department Management", icon: Apartment, items: [
+      { title: "Schedule Plotting Form", link: "/select_college", icon: EventNote, page_id: 53 },
+      { title: "Department Section Panel", link: "/department_section_panel", icon: Apartment, page_id: 20 },
+      { title: "Department Panel", link: "/department_registration", icon: Assignment, page_id: 21 },
+      { title: "Department Room Panel", link: "/department_room", icon: MeetingRoom, page_id: 22 },
+      { title: "Department Curriculum Panel", link: "/department_curriculum_panel", icon: MenuBook, page_id: 107 },
+      { title: "College Schedule Plotting", link: "/college_schedule_plotting", icon: EventNote, page_id: 108 },
+    ]},
+  ];
+
+  const systemMenuGroups = [
+    { key: "roomRequirements", label: "Room & Requirements", icon: MeetingRoom, items: [
+      { title: "Room Form", link: "/super_admin_room_registration", icon: MeetingRoom, page_id: 85 },
+      { title: "Requirements Panel", link: "/requirements_form", icon: Assignment, page_id: 51 },
+    ]},
+    { key: "settingsCommunication", label: "Settings & Communication", icon: Campaign, items: [
+      { title: `${shortTerm} Profile`, link: "/settings", icon: Settings, page_id: 74 },
+      { title: "Email Sender", link: "/email_template_manager", icon: Email, page_id: 67 },
+      { title: "Announcement", link: "/announcement", icon: Campaign, page_id: 66 },
+      { title: "Signature Upload", link: "/signature_upload", icon: Settings, page_id: 114 },
+    ]},
+    { key: "sectionSemester", label: "Section & Semester", icon: Class, items: [
+      { title: "Section Panel Form", link: "/section_panel", icon: Class, page_id: 57 },
+      { title: "Semester Panel Form", link: "/semester_panel", icon: Timeline, page_id: 58 },
+      { title: "Change Grading Period", link: "/change_grade_period", icon: ChangeCircle, page_id: 14 },
+    ]},
+    { key: "yearSchool", label: "Year & School", icon: CalendarToday, items: [
+      { title: "Year Update Panel", link: "/year_update_panel", icon: Update, page_id: 65 },
+      { title: "Year Level Panel Form", link: "/year_level_panel", icon: Layers, page_id: 63 },
+      { title: "Year Panel Form", link: "/year_panel", icon: CalendarToday, page_id: 64 },
+      { title: "School Year Activator", link: "/school_year_activator_panel", icon: EventAvailable, page_id: 54 },
+      { title: "School Year Panel", link: "/school_year_panel", icon: DateRange, page_id: 55 },
+    ]},
+    { key: "paymentEvaluation", label: "Payment & Evaluation", icon: Assessment, items: [
+      { title: "Evaluation Management", link: "/evaluation_crud", icon: HelpOutline, page_id: 23 },
+      { title: "TOSF CRUD", link: "/tosf_crud", icon: HelpOutline, page_id: 99 },
+      { title: "Payment Exporting Module", link: "/payment_exporting_module", icon: HelpOutline, page_id: 116 },
+      { title: "Student Scholarship List", link: "/student_scholarship_list", icon: HelpOutline, page_id: 116 },
+      { title: "Receipt Counter Assignment", link: "/assign_receipt_counter", icon: HelpOutline, page_id: 122 },
+      { title: "Matriculation Payment", link: "/matriculation_payment", icon: HelpOutline, page_id: 121 },
+    ]},
+  ];
+
+  const accountMenuGroups = [
+    { key: "accountSettings", label: "Settings", icon: Settings, items: [
+      { title: "Settings", link: "/registrar_reset_password", icon: Settings, page_id: 73 },
+      { title: "Student Grade File", link: "/student_grade_file", icon: Settings, page_id: 126 },
+    ]},
+    { key: "accountCreation", label: "Account Creation", icon: PersonAdd, items: [
+      { title: "Add Faculty Accounts", link: "/register_prof", icon: PersonAdd, page_id: 70 },
+      { title: "Add Registrar Account", link: "/register_registrar", icon: PersonAdd, page_id: 71 },
+      { title: "Add Student Account", link: "/register_student", icon: PersonAdd, page_id: 72 },
+      { title: "Professor Education", link: "/superadmin_professor_education", icon: PersonAdd, page_id: 109 },
+    ]},
+    { key: "accountInformation", label: "Account Information", icon: Info, items: [
+      { title: "Applicant Information", link: "/super_admin_applicant_dashboard1", icon: Info, page_id: 75 },
+      { title: "Upload Requirements", link: "/super_admin_requirements_uploader", icon: Info, page_id: 84 },
+      { title: "Student Information", link: "/super_admin_student_dashboard1", icon: Info, page_id: 86 },
+    ]},
+    { key: "userPageAccess", label: "User Access & Page Table", icon: Security, items: [
+      { title: "User Page Access", link: "/user_page_access", icon: Security, page_id: 72 },
+      { title: "Page Table", link: "/page_crud", icon: TableChart, page_id: 72 },
+    ]},
+    { key: "resetPasswordManagement", label: "Reset Password", icon: SupervisorAccount, items: [
+      { title: "Applicant Reset Password", link: "/superadmin_applicant_reset_password", icon: People, page_id: 81 },
+      { title: "Student Reset Password", link: "/superadmin_student_reset_password", icon: School, page_id: 91 },
+      { title: "Faculty Reset Password", link: "/superadmin_faculty_reset_password", icon: SupervisorAccount, page_id: 82 },
+      { title: "Registrar Reset Password", link: "/superadmin_registrar_reset_password", icon: AdminPanelSettings, page_id: 83 },
+    ]},
+  ];
+
+  const sectionMenus = {
+    admission: admissionMenuGroups,
+    course: courseMenuGroups,
+    department: departmentMenuGroups,
+    system: systemMenuGroups,
+    account: accountMenuGroups,
+  };
+
+  const managementItems = [
+    { key: "admission", title: "Admission Management", path: "/admission_dashboard", icon: Business, page_id: 92 },
+    { key: "course", title: "Course Management", path: "/course_management", icon: LibraryBooks, page_id: 93 },
+    { key: "department", title: "Department Management", path: "/department_dashboard", icon: Apartment, page_id: 94 },
+    { key: "system", title: "System Management", path: "/system_dashboard", icon: Settings, page_id: 95 },
+    { key: "account", title: "Account Management", path: "/account_dashboard", icon: People, page_id: 96 },
+  ];
+
+  const accessSet = accessObjToSet(userAccessList);
+  const registrarDashboard = getRegistrarDashboard(accessSet);
 
   return (
-<div className="h-screen w-78 hidden-print">
-
-      <ul
-        className="bg-white h-full p-3 px-5 text-maroon-500 w-full gap-2"
-        style={{ borderRight: `5px solid ${borderColor}` }}
-      >
-
-        <div className="flex items-center mt-[75px] mb-4 gap-3">
-          <div className="relative">
-            {/* 🧑 Profile Picture */}
-            {!(profileImage || personData?.profile_image) ? (
-              <Avatar
-                sx={{
-                  width: 50,
-                  height: 50,
-                  border: `2px solid ${borderColor}`,
-                  bgcolor: settings?.header_color || "#1976d2",
-                }}
-              />
-            ) : (
-              <Avatar
-                src={
-                  profileImage ||
-                  `${API_BASE_URL}/uploads/${dir}/${personData.profile_image}?t=${Date.now()}`
-                }
-                sx={{
-                  width: 50,
-                  height: 50,
-                  border: `2px solid ${borderColor}`,
-                }}
-              />
-            )}
-
-          {/* ➕ Plus Icon Overlay — REGISTRAR */}
-          {role === "registrar" && (
-            <>
-              <label
-                htmlFor="sidebar-profile-upload"
-                style={{
-                  position: "absolute",
-                  bottom: -6,
-                  right: -6,
-                  cursor: "pointer",
-                }}
-              >
-                <AddCircleIcon
-                  sx={{
-                    color: settings?.header_color || "#1976d2",
-                    fontSize: 18,
-                    backgroundColor: "white",
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "50%",
-                    border: `2px solid ${borderColor}`,
-                  }}
-                />
-              </label>
-
-              <input
-                id="sidebar-profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  try {
-                    const person_id = localStorage.getItem("person_id");
-                    const role = localStorage.getItem("role");
-
-                    const formData = new FormData();
-                    formData.append("profile_picture", file);
-                    formData.append("person_id", person_id);
-
-                    await axios.post(
-                      `${API_BASE_URL}/admin/update_registrar`,
-                      formData,
-                    );
-
-                    const updated = await axios.get(
-                      `${API_BASE_URL}/api/person_data/${person_id}/${role}`
-                    );
-
-                    setPersonData(updated.data);
-                    const baseUrl = `${API_BASE_URL}/uploads/Admin1by1/${updated.data.profile_image}`;
-                    setProfileImage(`${baseUrl}?t=${Date.now()}`);
-                  } catch (error) {
-                    console.error("❌ Upload failed:", error);
-                  }
-                }}
-                style={{ display: "none" }}
-              />
-            </>
-          )}
-
-          {/* APPLICANT */}
-          {role === "applicant" && (
-            <>
-              <label
-                htmlFor="sidebar-profile-upload"
-                style={{
-                  position: "absolute",
-                  bottom: -6,
-                  right: -6,
-                  cursor: "pointer",
-                }}
-              >
-                <AddCircleIcon
-                  sx={{
-                    color: settings?.header_color || "#1976d2",
-                    fontSize: 18,
-                    backgroundColor: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    border: `2px solid ${borderColor}`,
-                  }}
-                />
-              </label>
-
-              <input
-                id="sidebar-profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  // ✅ SHOW IMAGE IMMEDIATELY
-                  setProfileImage(URL.createObjectURL(file));
-
-                  try {
-                    const person_id = localStorage.getItem("person_id");
-                    const role = localStorage.getItem("role");
-
-                    const formData = new FormData();
-                    formData.append("profile_picture", file);
-                    formData.append("person_id", person_id);
-
-                    await axios.post(
-                      `${API_BASE_URL}/form/upload-profile-picture`,
-                      formData
-                    );
-
-                    const updated = await axios.get(
-                      `${API_BASE_URL}/api/person_data/${person_id}/${role}`
-                    );
-
-                    setPersonData(updated.data);
-
-                    // ✅ refresh with backend image (cache-busted)
-                    setProfileImage(
-                      `${API_BASE_URL}/uploads/Applicant1by1/${updated.data.profile_image}?t=${Date.now()}`
-                    );
-                  } catch (error) {
-                    console.error("❌ Upload failed:", error);
-                  }
-                }}
-
-                style={{ display: "none" }}
-              />
-            </>
-          )}
-
-          {/* FACULTY */}
-          {role === "faculty" && (
-            <>
-              <label
-                htmlFor="sidebar-profile-upload"
-                style={{
-                  position: "absolute",
-                  bottom: -6,
-                  right: -6,
-                  cursor: "pointer",
-                }}
-              >
-                <AddCircleIcon
-                  sx={{
-                    color: settings?.header_color || "#1976d2",
-                    fontSize: 18,
-                    backgroundColor: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    border: `2px solid ${borderColor}`,
-                  }}
-                />
-              </label>
-
-              <input
-                id="sidebar-profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  try {
-                    const person_id = localStorage.getItem("person_id");
-                    const role = localStorage.getItem("role");
-
-                    const formData = new FormData();
-                    formData.append("profile_picture", file);
-                    formData.append("person_id", person_id);
-
-                    await axios.post(
-                      `${API_BASE_URL}/faculty/update_faculty`,
-                      formData
-                    );
-
-                    const updated = await axios.get(
-                      `${API_BASE_URL}/api/person_data/${person_id}/${role}`
-                    );
-                    setPersonData(updated.data);
-
-                    const baseUrl = `${API_BASE_URL}/uploads/Faculty1by1/${updated.data.profile_image}`;
-                    setProfileImage(`${baseUrl}?t=${Date.now()}`);
-                  } catch (error) {
-                    console.error("❌ Upload failed:", error);
-                  }
-                }}
-                style={{ display: "none" }}
-              />
-            </>
-          )}
-
-          {/* STUDENT */}
-          {role === "student" && (
-            <>
-              <label
-                htmlFor="sidebar-profile-upload"
-                style={{
-                  position: "absolute",
-                  bottom: -6,
-                  right: -6,
-                  cursor: "pointer",
-                }}
-              >
-                <AddCircleIcon
-                  sx={{
-                    color: settings?.header_color || "#1976d2",
-                    fontSize: 18,
-                    backgroundColor: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    border: `2px solid ${borderColor}`,
-                  }}
-                />
-              </label>
-
-              <input
-                id="sidebar-profile-upload"
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  try {
-                    const person_id = localStorage.getItem("person_id");
-                    const role = localStorage.getItem("role");
-
-                    const formData = new FormData();
-                    formData.append("profile_picture", file);
-                    formData.append("person_id", person_id);
-
-                    await axios.post(
-                      `${API_BASE_URL}/student/update_student`,
-                      formData
-                    );
-
-                    const updated = await axios.get(
-                      `${API_BASE_URL}/api/person_data/${person_id}/${role}`
-                    );
-
-                    setPersonData(updated.data);
-                    const baseUrl = `${API_BASE_URL}/uploads/Student1by1/${updated.data.profile_image}`;
-                    setProfileImage(`${baseUrl}?t=${Date.now()}`);
-                  } catch (error) {
-                    console.error("❌ Upload failed:", error);
-                  }
-                }}
-                style={{ display: "none" }}
-              />
-            </>
-          )}
-
+    <div className="sb-root hidden-print">
+      {/* ── Profile ── */}
+      <Tooltip
+        arrow
+        placement="right"
+        title={
+          <div style={{ padding: 6, maxWidth: 240 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+              {personData?.fname ? `${personData.fname} ${personData.lname}` : role || "User"}
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 4 }}>
+              {role === "student"
+                ? `Student No: ${personData?.student_number || "—"}`
+                : role === "applicant"
+                ? `Applicant No: ${personData?.applicant_number || "—"}`
+                : `ID: ${personData?.employee_id || "—"}`}
+            </div>
           </div>
-
-          {/* 👤 Role + Name Display */}
-          {role === "registrar" && (
-            <span className="text-left">
-              {personData && (personData.fname || personData.lname) ? (
-                <>
-                  <Typography variant="subtitle1">
-                    {personData.fname} {personData.lname}
-                  </Typography>
-                  <Typography variant="body2" color="maroon">
-                    {accessDescription || "Administrator"} ({personData.employee_id})
-                  </Typography>
-                </>
-              ) : (
-                <span>Administrator</span>
-              )}
-            </span>
-          )}
-          {role === "applicant" && (
-            <span className="text-left">
-              {personData && (personData.fname || personData.lname) ? (
-                <>
-                  <Typography variant="subtitle1">
-                    {personData.fname} {personData.lname}
-                  </Typography>
-                  <Typography variant="body2" color="maroon">
-                    {personData.role.charAt(0).toUpperCase() +
-                      personData.role.slice(1)}
-                  </Typography>
-                </>
-              ) : (
-                <span>Applicant</span>
-              )}
-            </span>
-          )}
-          {role === "faculty" && (
-            <span className="text-left">
-              {personData && (personData.fname || personData.lname) ? (
-                <>
-                  <Typography variant="subtitle1">
-                    {personData.fname} {personData.lname}
-                  </Typography>
-                  <Typography variant="body2" color="maroon">
-                    {personData.role.charAt(0).toUpperCase() +
-                      personData.role.slice(1)} ({personData.employee_id})
-                  </Typography>
-                </>
-              ) : (
-                <span>Faculty</span>
-              )}
-            </span>
-          )}
-          {role === "student" && (
-            <span className="text-left">
-              {personData && (personData.fname || personData.lname) ? (
-                <>
-                  <Typography variant="subtitle1">
-                    {personData.fname} {personData.lname}
-                  </Typography>
-                  <Typography variant="body2" color="maroon">
-                    {personData.role.charAt(0).toUpperCase() +
-                      personData.role.slice(1)} ({personData.student_number})
-                  </Typography>
-                </>
-              ) : (
-                <span>Student</span>
-              )}
-            </span>
-          )}
+        }
+      >
+        <div className="sb-profile">
+          <div className="sb-avatar-wrap">
+            {avatarSrc ? (
+              <Avatar src={avatarSrc} sx={{ width: 40, height: 40, border: `2px solid ${accentColor}` }} />
+            ) : (
+              <Avatar sx={{ width: 40, height: 40, bgcolor: accentColor, fontSize: 16, border: `2px solid ${accentColor}` }}>
+                {personData?.fname?.[0] || "?"}
+              </Avatar>
+            )}
+            {showUploadFor && (
+              <>
+                <label htmlFor="sb-upload" className="sb-upload-btn">
+                  <AddCircleIcon sx={{ fontSize: 14, color: accentColor }} />
+                </label>
+                <ProfileUploadInput id="sb-upload" onChange={uploadHandlers[role]} />
+              </>
+            )}
+          </div>
+          <div className="sb-profile-info">
+            <div className="sb-profile-name">
+              {personData?.fname ? `${personData.fname} ${personData.lname}` : role || "User"}
+            </div>
+            <div className="sb-profile-role">
+              {role === "registrar"
+                ? accessDescription || "Administrator"
+                : role === "student"
+                ? `Student · ${personData?.student_number || ""}`
+                : role === "faculty"
+                ? `Faculty · ${personData?.employee_id || ""}`
+                : role
+                  ? role.charAt(0).toUpperCase() + role.slice(1)
+                  : ""}
+            </div>
+          </div>
         </div>
+      </Tooltip>
 
-        <br />
-        <hr className="bg-maroon-500" />
-        <br />
-        {role === "registrar" && (() => {
-          const accessSet = accessObjToSet(userAccessList);
-          const registrarDashboard = getRegistrarDashboard(accessSet);
-          const isActive = location.pathname === registrarDashboard;
+      {/* ── Scrollable nav ── */}
+      <div className="sb-scroll">
 
-          return (
-            <>
-              {/* Registrar Dashboard */}
-              <Link to={registrarDashboard}>
-                <li
-                  className="w-full flex items-center px-2 rounded button-hover"
-                  style={{
-                    backgroundColor: isActive ? mainButtonColor : "transparent",
-                    color: isActive ? "#ffffff" : "inherit",
-                    border: `2px solid ${borderColor}`,
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = mainButtonColor;
-                      e.currentTarget.style.color = "#ffffff";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.color = "inherit";
-                    }
-                  }}
-                >
-                  <Dashboard />
-                  <span className="pl-4 p-2 px-0 pointer-events-none">Dashboard</span>
-                </li>
-              </Link>
+        {/* ═══ REGISTRAR ═══ */}
+        {role === "registrar" && (
+          <>
+            <div className="sb-section-label">Navigation</div>
+            <NavItem to={registrarDashboard} icon={DashboardIcon} label="Dashboard" active={isActive(registrarDashboard)} />
 
-              {/* Grouped Menu Items */}
-              {groupedMenu.map((group, idx) => (
-                <div key={idx}>
-                  <h6
-                    className="mt-2 mb-2 px-2"
-                    style={{ color: mainButtonColor, fontWeight: 600 }}
-                  >
-                    {group.label}
-                  </h6>
-
-                  {group.items.map((item) => {
-                    if (!userAccessList[item.page_id]) return null;
-
-                    const isActive = location.pathname === item.path;
-
-                    return (
-                      <Link to={item.path} key={item.page_id}>
-                        <li
-                          className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                          style={{
-                            backgroundColor: isActive ? mainButtonColor : "transparent",
-                            color: isActive ? "#ffffff" : "inherit",
-                            border: `2px solid ${borderColor}`,
-                            cursor: "pointer",
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isActive) {
-                              e.currentTarget.style.backgroundColor = mainButtonColor;
-                              e.currentTarget.style.color = "#ffffff";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isActive) {
-                              e.currentTarget.style.backgroundColor = "transparent";
-                              e.currentTarget.style.color = "inherit";
-                            }
-                          }}
-                        >
-                          <item.icon />
-                          <span className="pl-4 p-2 px-0 pointer-events-none">
-                            {item.title}
-                          </span>
-                        </li>
-                      </Link>
-                    );
-                  })}
+            {managementItems.map((item) => {
+              if (!userAccessList[item.page_id]) return null;
+              const groups = sectionMenus[item.key];
+              return (
+                <div key={item.key}>
+                  <div className="sb-section-label">{item.title}</div>
+                  {groups ? (
+                    groups.map((group) => {
+                      const visibleItems = group.items.filter(
+                        (si) => si.page_id === undefined || userAccessList[si.page_id]
+                      );
+                      if (visibleItems.length === 0) return null;
+                      const gKey = `${item.key}_${group.key}`;
+                      const open = isGroupOpen(gKey);
+                      return (
+                        <div key={gKey}>
+                          <GroupToggle label={group.label} icon={group.icon} open={open} onToggle={() => toggleGroup(gKey)} />
+                          {open && visibleItems.map((si) => (
+                            <NavItem
+                              key={si.link}
+                              to={si.link}
+                              icon={si.icon}
+                              label={si.title}
+                              active={isActive(si.link)}
+                              sub
+                            />
+                          ))}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <NavItem to={item.path} icon={item.icon} label={`Open ${item.title}`} active={isActive(item.path)} />
+                  )}
                 </div>
-              ))}
-            </>
-          );
-        })()}
+              );
+            })}
 
+            <div className="sb-divider" />
+          </>
+        )}
+
+        {/* ═══ APPLICANT ═══ */}
         {role === "applicant" && (
           <>
-            {/* Dashboard */}
-            <Link to="/applicant_dashboard">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname.startsWith("/applicant_dashboard")
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname.startsWith("/applicant_dashboard")
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!location.pathname.startsWith("/applicant_dashboard")) {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!location.pathname.startsWith("/applicant_dashboard")) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <DashboardIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Dashboard</span>
-              </li>
-            </Link>
-
-            {/* Applicant Form */}
-            <Link
+            <div className="sb-section-label">Navigation</div>
+            <NavItem to="/applicant_dashboard" icon={DashboardIcon} label="Dashboard" active={isActivePrefix("/applicant_dashboard")} />
+            <NavItem
+              icon={AssignmentIndIcon}
+              label="Applicant Form"
+              active={isActivePrefix("/dashboard/")}
               onClick={() => {
                 let keys = JSON.parse(localStorage.getItem("dashboardKeys"));
                 if (!keys) {
-                  const generateKey = () => Math.random().toString(36).substring(2, 10);
-                  keys = {
-                    step1: generateKey(),
-                    step2: generateKey(),
-                    step3: generateKey(),
-                    step4: generateKey(),
-                    step5: generateKey(),
-                  };
+                  const g = () => Math.random().toString(36).substring(2, 10);
+                  keys = { step1: g(), step2: g(), step3: g(), step4: g(), step5: g() };
                   localStorage.setItem("dashboardKeys", JSON.stringify(keys));
                 }
                 window.location.href = `/dashboard/${keys.step1}`;
               }}
-            >
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname.startsWith("/dashboard/")
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname.startsWith("/dashboard/")
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!location.pathname.startsWith("/dashboard/")) {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!location.pathname.startsWith("/dashboard/")) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <AssignmentIndIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Applicant Form</span>
-              </li>
-            </Link>
-
-            {/* Upload Requirements */}
-            <Link to="/requirements_uploader">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname.startsWith("/requirements_uploader")
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname.startsWith("/requirements_uploader")
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!location.pathname.startsWith("/requirements_uploader")) {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!location.pathname.startsWith("/requirements_uploader")) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <CloudUploadIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Upload Requirements
-                </span>
-              </li>
-            </Link>
-
-            {/* Change Password */}
-            <Link to="/applicant_reset_password">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname.startsWith("/applicant_reset_password")
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname.startsWith("/applicant_reset_password")
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!location.pathname.startsWith("/applicant_reset_password")) {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!location.pathname.startsWith("/applicant_reset_password")) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <LockResetIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Change Password
-                </span>
-              </li>
-            </Link>
+            />
+            <NavItem to="/requirements_uploader" icon={CloudUploadIcon} label="Upload Requirements" active={isActivePrefix("/requirements_uploader")} />
+            <div className="sb-divider" />
+            <NavItem to="/applicant_reset_password" icon={LockResetIcon} label="Change Password" active={isActivePrefix("/applicant_reset_password")} />
           </>
         )}
 
+        {/* ═══ FACULTY ═══ */}
         {role === "faculty" && (
           <>
-            {/* Faculty Dashboard */}
-            <Link to="/faculty_dashboard">
-              <li
-                className="w-full flex items-center px-2 rounded button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/faculty_dashboard"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/faculty_dashboard"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/faculty_dashboard") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/faculty_dashboard") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <DashboardIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Dashboard</span>
-              </li>
-            </Link>
-
-            {/* Workload */}
-            <Link to="/faculty_workload">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/faculty_workload"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/faculty_workload"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/faculty_workload") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/faculty_workload") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <WorkIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Workload</span>
-              </li>
-            </Link>
-
-            {/* Faculty Class List */}
-            <Link to="/faculty_masterlist">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/faculty_masterlist"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/faculty_masterlist"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/faculty_masterlist") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/faculty_masterlist") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <ListAltIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Class List</span>
-              </li>
-            </Link>
-
-            {/* Grading Management */}
-            <Link to="/grading_sheet">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/grading_sheet"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/grading_sheet"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/grading_sheet") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/grading_sheet") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <AssignmentTurnedInIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Grading Management
-                </span>
-              </li>
-            </Link>
-
-            {/* Faculty Evaluation */}
-            <Link to="/faculty_evaluation">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/faculty_evaluation"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/faculty_evaluation"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/faculty_evaluation") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/faculty_evaluation") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <SchoolIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Faculty Evaluation
-                </span>
-              </li>
-            </Link>
-
-
-
-            {/* Reset Password */}
-            <Link to="/faculty_reset_password">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/faculty_reset_password"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/faculty_reset_password"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/faculty_reset_password") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/faculty_reset_password") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <Settings />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Settings</span>
-              </li>
-            </Link>
+            <div className="sb-section-label">Navigation</div>
+            <NavItem to="/faculty_dashboard" icon={DashboardIcon} label="Dashboard" active={isActive("/faculty_dashboard")} />
+            <NavItem to="/faculty_workload" icon={WorkIcon} label="Workload" active={isActive("/faculty_workload")} />
+            <NavItem to="/faculty_masterlist" icon={ListAltIcon} label="Class List" active={isActive("/faculty_masterlist")} />
+            <NavItem to="/grading_sheet" icon={AssignmentTurnedInIcon} label="Grading Management" active={isActive("/grading_sheet")} />
+            <NavItem to="/faculty_evaluation" icon={SchoolIcon} label="Faculty Evaluation" active={isActive("/faculty_evaluation")} />
+            <div className="sb-divider" />
+            <NavItem to="/faculty_reset_password" icon={Settings} label="Settings" active={isActive("/faculty_reset_password")} />
           </>
         )}
+
+        {/* ═══ STUDENT ═══ */}
         {role === "student" && (
           <>
-            {/* Student Dashboard */}
-            <Link to="/student_dashboard">
-              <li
-                className="w-full flex items-center px-2 rounded button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/student_dashboard"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/student_dashboard"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/student_dashboard") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/student_dashboard") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <DashboardIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Dashboard</span>
-              </li>
-            </Link>
-
-            {/* Schedule */}
-            <Link to="/student_schedule">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/student_schedule"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/student_schedule"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/student_schedule") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/student_schedule") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <EventNoteIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Schedule</span>
-              </li>
-            </Link>
-
-            {/* Grades */}
-            <Link to="/grades_page">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/grades_page"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/grades_page"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/grades_page") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/grades_page") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <GradeIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">Grades</span>
-              </li>
-            </Link>
-
-            {/* Student Faculty Evaluation */}
-            <Link to="/student_faculty_evaluation">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/student_faculty_evaluation"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/student_faculty_evaluation"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/student_faculty_evaluation") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/student_faculty_evaluation") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <AssignmentTurnedInIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Faculty Evaluation
-                </span>
-              </li>
-            </Link>
-
-            {/* Student Profile */}
-            <Link to="/student_dashboard1">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor: /^\/student_dashboard[1-5]$/.test(location.pathname)
-                    ? mainButtonColor
-                    : "transparent",
-                  color: /^\/student_dashboard[1-5]$/.test(location.pathname)
-                    ? "#ffffff"
-                    : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!/^\/student_dashboard[1-5]$/.test(location.pathname)) {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!/^\/student_dashboard[1-5]$/.test(location.pathname)) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <PersonIcon />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Student Profile
-                </span>
-              </li>
-            </Link>
-
-            {/* Reset Password */}
-            <Link to="/student_reset_password">
-              <li
-                className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-                style={{
-                  backgroundColor:
-                    location.pathname === "/student_reset_password"
-                      ? mainButtonColor
-                      : "transparent",
-                  color:
-                    location.pathname === "/student_reset_password"
-                      ? "#ffffff"
-                      : "inherit",
-                  border: `2px solid ${borderColor}`,
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== "/student_reset_password") {
-                    e.currentTarget.style.backgroundColor = mainButtonColor;
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== "/student_reset_password") {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = "inherit";
-                  }
-                }}
-              >
-                <Settings />
-                <span className="pl-4 p-2 px-0 pointer-events-none">
-                  Settings
-                </span>
-              </li>
-            </Link>
+            <div className="sb-section-label">Navigation</div>
+            <NavItem to="/student_dashboard" icon={DashboardIcon} label="Dashboard" active={isActive("/student_dashboard")} />
+            <NavItem to="/student_schedule" icon={EventNoteIcon} label="Schedule" active={isActive("/student_schedule")} />
+            <NavItem to="/grades_page" icon={GradeIcon} label="Grades" active={isActive("/grades_page")} />
+            <NavItem to="/student_faculty_evaluation" icon={AssignmentTurnedInIcon} label="Faculty Evaluation" active={isActive("/student_faculty_evaluation")} />
+            <NavItem to="/student_dashboard1" icon={PersonIcon} label="Student Profile" active={/^\/student_dashboard[1-5]$/.test(loc)} />
+            <div className="sb-divider" />
+            <NavItem to="/student_reset_password" icon={Settings} label="Settings" active={isActive("/student_reset_password")} />
           </>
         )}
 
+        {/* bottom padding */}
+        <div style={{ height: 12 }} />
+      </div>
 
-        <li
-          className="w-full flex items-center px-2 rounded m-2 mx-0 button-hover"
-          onClick={Logout}
-          style={{
-            border: `2px solid ${borderColor}`,
-            backgroundColor: "transparent",
-            color: "inherit",
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = mainButtonColor;
-            e.currentTarget.style.color = "#ffffff";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = "inherit";
-          }}
-        >
-          <LogoutOutlined />
-          <span className="pl-4 p-2 px-0 pointer-events-none">Logout</span>
-        </li>
-      </ul>
+      {/* ── Footer / Logout ── */}
+      <div className="sb-footer">
+        <div className="sb-logout" onClick={Logout}>
+          <span className="sb-icon"><LogoutOutlined sx={{ fontSize: 19 }} /></span>
+          <span>Logout</span>
+        </div>
+      </div>
     </div>
   );
 };

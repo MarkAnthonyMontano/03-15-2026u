@@ -39,7 +39,7 @@ const allowedOrigins = [
   'http://192.168.50.211:5173',
   'http://136.239.248.62:5173',
   'http://192.168.50.62:5173',
-  'http://192.168.50.41:5173',
+  'http://192.168.0.180:5173',
 ];
 
 app.use(
@@ -2868,6 +2868,7 @@ app.get("/api/all-applicants", async (req, res) => {
         p.program,
         pgt.program_code,
         p.emailAddress,
+        p.generalAverage,
         p.generalAverage1,
         p.campus,
         p.created_at,
